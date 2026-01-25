@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "64d4fe56d9192505ee87d96384946a0b",
+    "content-hash": "c3b92e96e82aeb1c7816c5cb418216a1",
     "packages": [
         {
             "name": "brick/math",
@@ -1051,6 +1051,61 @@
                 }
             ],
             "time": "2025-08-22T14:27:06+00:00"
+        },
+        {
+            "name": "khanhartisan/laravel-backbone",
+            "version": "2.0.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/khanhartisan/laravel-backbone.git",
+                "reference": "9e7455e883a86a41525cd7f56e66cffa73d58fbd"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/khanhartisan/laravel-backbone/zipball/9e7455e883a86a41525cd7f56e66cffa73d58fbd",
+                "reference": "9e7455e883a86a41525cd7f56e66cffa73d58fbd",
+                "shasum": ""
+            },
+            "require": {
+                "illuminate/database": "^11.0|^12.0",
+                "illuminate/http": "^11.0|^12.0",
+                "php": "^8.2",
+                "symfony/finder": "^6.2|^7.0"
+            },
+            "require-dev": {
+                "laravel/sail": "^1.23",
+                "nunomaduro/collision": "^8.1",
+                "orchestra/testbench": "^9.0|^10.0"
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "KhanhArtisan\\LaravelBackbone\\BackboneServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "KhanhArtisan\\LaravelBackbone\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Khanh",
+                    "email": "khanh.artisan@gmail.com"
+                }
+            ],
+            "description": "Backbone for Laravel projects",
+            "support": {
+                "issues": "https://github.com/khanhartisan/laravel-backbone/issues",
+                "source": "https://github.com/khanhartisan/laravel-backbone/tree/2.0.0"
+            },
+            "time": "2025-03-14T07:49:25+00:00"
         },
         {
             "name": "laravel/framework",

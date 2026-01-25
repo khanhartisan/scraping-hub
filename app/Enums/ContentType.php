@@ -38,7 +38,6 @@ enum ContentType: string implements DescribableEnum
             self::DISCUSSION => 'Discussion or forum thread content.',
             self::RECIPE => 'Recipe or cooking instructions content.',
             self::WEBINAR => 'Webinar content (live or recorded).',
-            self::UNKNOWN => 'Unknown content type.',
             default => 'Unknown content type.'
         };
     }

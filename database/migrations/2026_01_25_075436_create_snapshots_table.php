@@ -11,10 +11,13 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('verticals', function (Blueprint $table) {
+        Schema::create('snapshots', function (Blueprint $table) {
             $table->ulid('id')->primary();
-            $table->string('name')->unique();
-            $table->text('description')->nullable();
+            $table->ulid('entity_id')->index();
+            $table->unsignedTinyInteger('scraping_status')
+                ->default(\App\Enums\ScrapingStatus::PENDING->value);
+            $table->string('file_path')->nullable()->index();
+            $table->unsignedInteger('version')->default(0);
             $table->timestamps();
         });
     }
@@ -24,6 +27,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('verticals');
+        Schema::dropIfExists('snapshots');
     }
 };

@@ -9,6 +9,7 @@ enum PageType: string implements DescribableEnum
     case LISTING = 'listing';
     case DETAIL = 'detail';
     case REDIRECT = 'redirect';
+    case UNKNOWN = 'unknown';
 
     public static function describe(DescribableEnum $enum): string
     {

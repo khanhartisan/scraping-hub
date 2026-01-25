@@ -11,9 +11,14 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('pages', function (Blueprint $table) {
-            $table->id();
+        Schema::create('source_entity_counts', function (Blueprint $table) {
+            $table->ulid('id')->primary();
+            $table->ulid('source_id');
+            $table->unsignedTinyInteger('entity_type');
+            $table->unsignedBigInteger('count')->default(0);
             $table->timestamps();
+
+            $table->unique(['source_id', 'entity_type']);
         });
     }
 
@@ -22,6 +27,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('pages');
+        Schema::dropIfExists('source_entity_counts');
     }
 };

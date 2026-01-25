@@ -11,8 +11,10 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('files', function (Blueprint $table) {
-            $table->id();
+        Schema::create('entity_relations', function (Blueprint $table) {
+            $table->ulid('id')->primary();
+            $table->ulid('source_entity_id')->index();
+            $table->ulid('related_entity_id')->index();
             $table->timestamps();
         });
     }
@@ -22,6 +24,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('files');
+        Schema::dropIfExists('entity_relations');
     }
 };

@@ -2,20 +2,17 @@
 
 namespace App\Contracts\FileVision;
 
-final class FileDescription
+use App\Contracts\Describable;
+
+final class FileDescription implements Describable
 {
+    use \App\Concerns\Describable;
+
     protected string $filePath;
 
     protected string $extension;
 
     protected string $mimeType;
-
-    protected string $description;
-
-    /**
-     * @var array<int, string>
-     */
-    protected array $labels;
 
     protected float $confidence;
 
@@ -54,34 +51,6 @@ final class FileDescription
     public function setMimeType(string $mimeType): static
     {
         $this->mimeType = $mimeType;
-        return $this;
-    }
-
-    public function getDescription(): ?string
-    {
-        return $this->description ?? null;
-    }
-
-    public function setDescription(string $description): static
-    {
-        $this->description = $description;
-        return $this;
-    }
-
-    /**
-     * @return array<int, string>
-     */
-    public function getLabels(): array
-    {
-        return $this->labels ?? [];
-    }
-
-    /**
-     * @param array<int, string> $labels
-     */
-    public function setLabels(array $labels): static
-    {
-        $this->labels = $labels;
         return $this;
     }
 

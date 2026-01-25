@@ -2,17 +2,92 @@
 
 namespace App\Contracts\PageClassifier;
 
+use App\Contracts\Describable;
 use App\Enums\ContentType;
 use App\Enums\PageType;
 use App\Enums\Temporal;
 
-final class ClassificationResult
+final class ClassificationResult implements Describable
 {
+    use \App\Concerns\Describable;
+
     protected ContentType $contentType;
 
     protected PageType $pageType;
 
     protected Temporal $temporal;
+
+    /**
+     * @var array<int, string>
+     */
+    protected array $tags = [];
+
+    /**
+     * @return array<int, string>
+     */
+    public function getTags(): array
+    {
+        return $this->tags ?? [];
+    }
+
+    /**
+     * @param array<int, string> $tags
+     */
+    public function setTags(array $tags): static
+    {
+        $this->clearTags();
+        foreach ($tags as $tag) {
+            $this->addTag($tag);
+        }
+
+        return $this;
+    }
+
+    public function clearTags(): static
+    {
+        $this->tags = [];
+        return $this;
+    }
+
+    public function addTag(string $tag): static
+    {
+        $tag = $this->normalizeTag($tag);
+
+        foreach ($this->tags ?? [] as $i => $existingTag) {
+            if ($this->normalizeTag($existingTag) === $tag) {
+                // Normalize existing tag casing/whitespace in-place.
+                $this->tags[$i] = $tag;
+                return $this;
+            }
+        }
+
+        $this->tags[] = $tag;
+
+        return $this;
+    }
+
+    public function removeTag(string $tag): static
+    {
+        $normalizedTag = $this->normalizeTag($tag);
+
+        $remaining = array_values(array_filter(
+            $this->tags ?? [],
+            fn (string $t): bool => $this->normalizeTag($t) !== $normalizedTag
+        ));
+
+        return $this->setTags($remaining);
+    }
+
+    private function normalizeTag(string $tag): string
+    {
+        $tag = trim($tag);
+
+        if (function_exists('mb_strtolower')) {
+            return mb_strtolower($tag);
+        }
+
+        return strtolower($tag);
+    }
 
     public function getContentType(): ?ContentType
     {

@@ -11,14 +11,15 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('source_entity_counts', function (Blueprint $table) {
+        Schema::create('entity_counts', function (Blueprint $table) {
             $table->ulid('id')->primary();
-            $table->ulid('source_id');
+            $table->string('countable_type');
+            $table->ulid('countable_id');
             $table->unsignedTinyInteger('entity_type');
             $table->unsignedBigInteger('count')->default(0);
             $table->timestamps();
 
-            $table->unique(['source_id', 'entity_type']);
+            $table->unique(['countable_type', 'countable_id', 'entity_type'], 'countable_unique');
         });
     }
 
@@ -27,6 +28,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('source_entity_counts');
+        Schema::dropIfExists('entity_counts');
     }
 };

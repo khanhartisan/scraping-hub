@@ -2,18 +2,15 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Concerns\HasUlids;
+use App\Models\Concerns\EntityCountable;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Source extends Model
 {
+    use EntityCountable;
+
     public function entities(): HasMany
     {
         return $this->hasMany(Entity::class);
-    }
-
-    public function sourceEntityCounts(): HasMany
-    {
-        return $this->hasMany(SourceEntityCount::class);
     }
 }

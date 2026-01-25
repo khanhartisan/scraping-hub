@@ -48,4 +48,11 @@ class Entity extends Model
             'source_entity_id'
         );
     }
+
+    public function verticals(): BelongsToMany
+    {
+        return $this->belongsToMany(Vertical::class)
+            ->using(EntityVertical::class)
+            ->as('entity_vertical');
+    }
 }

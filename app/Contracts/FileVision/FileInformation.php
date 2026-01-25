@@ -4,7 +4,7 @@ namespace App\Contracts\FileVision;
 
 use App\Contracts\Describable;
 
-final class FileDescription implements Describable
+final class FileInformation implements Describable
 {
     use \App\Concerns\Describable;
 
@@ -15,11 +15,6 @@ final class FileDescription implements Describable
     protected string $mimeType;
 
     protected float $confidence;
-
-    /**
-     * @var array<string, mixed>
-     */
-    protected array $metadata;
 
     public function getFilePath(): ?string
     {
@@ -62,23 +57,6 @@ final class FileDescription implements Describable
     public function setConfidence(float $confidence): static
     {
         $this->confidence = $confidence;
-        return $this;
-    }
-
-    /**
-     * @return array<string, mixed>
-     */
-    public function getMetadata(): array
-    {
-        return $this->metadata ?? [];
-    }
-
-    /**
-     * @param array<string, mixed> $metadata
-     */
-    public function setMetadata(array $metadata): static
-    {
-        $this->metadata = $metadata;
         return $this;
     }
 }

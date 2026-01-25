@@ -16,7 +16,12 @@ return new class extends Migration
             $table->ulid('entity_id')->index();
             $table->unsignedTinyInteger('scraping_status')
                 ->default(\App\Enums\ScrapingStatus::PENDING->value);
+
             $table->string('file_path')->nullable()->index();
+            $table->unsignedBigInteger('file_size')->nullable();
+            $table->string('file_mime_type')->nullable();
+            $table->string('file_extension')->nullable();
+
             $table->unsignedInteger('version')->default(0);
             $table->timestamps();
         });

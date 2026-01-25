@@ -4,5 +4,5 @@ namespace App\Contracts\FileVision;
 
 interface FileVision
 {
-    public function describe(string $filePath): FileDescription;
+    public function describe(string $filePath): FileInformation;
 }

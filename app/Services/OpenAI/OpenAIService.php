@@ -147,7 +147,17 @@ class OpenAIService implements OpenAIClient
 
         // Merge options if provided
         if ($options !== null) {
-            $payload = array_merge($payload, $options->toArray());
+            $optionsArray = $options->toArray();
+            
+            // Convert response_format to text.format for Responses API
+            if (isset($optionsArray['response_format'])) {
+                $payload['text'] = [
+                    'format' => $optionsArray['response_format'],
+                ];
+                unset($optionsArray['response_format']);
+            }
+            
+            $payload = array_merge($payload, $optionsArray);
         }
 
         return $payload;

@@ -2,8 +2,12 @@
 
 namespace App\Contracts\OpenAI;
 
-final class ResponseOptions
+use App\Concerns\Serializable as SerializableTrait;
+use App\Contracts\Serializable;
+
+final class ResponseOptions implements Serializable
 {
+    use SerializableTrait;
     protected ?string $model = null;
 
     protected ?string $previousResponseId = null;
@@ -347,5 +351,82 @@ final class ResponseOptions
     public function getMaxTokens(): ?int
     {
         return $this->maxTokens;
+    }
+
+    /**
+     * Create an instance from an array representation.
+     *
+     * @param  array<string, mixed>  $data
+     * @return static
+     */
+    public static function fromArray(array $data): static
+    {
+        $options = static::create();
+
+        if (isset($data['model'])) {
+            $options->model($data['model']);
+        }
+
+        if (isset($data['previous_response_id'])) {
+            $options->previousResponseId($data['previous_response_id']);
+        }
+
+        if (isset($data['tools'])) {
+            $options->tools($data['tools']);
+        }
+
+        if (isset($data['tool_choice'])) {
+            $options->toolChoice($data['tool_choice']);
+        }
+
+        if (isset($data['response_format'])) {
+            $options->responseFormat($data['response_format']);
+        }
+
+        if (isset($data['temperature'])) {
+            $options->temperature($data['temperature']);
+        }
+
+        if (isset($data['max_tokens'])) {
+            $options->maxTokens($data['max_tokens']);
+        }
+
+        if (isset($data['max_output_tokens'])) {
+            $options->maxOutputTokens($data['max_output_tokens']);
+        }
+
+        if (isset($data['max_tool_calls'])) {
+            $options->maxToolCalls($data['max_tool_calls']);
+        }
+
+        if (isset($data['parallel_tool_calls'])) {
+            $options->parallelToolCalls($data['parallel_tool_calls']);
+        }
+
+        if (isset($data['top_p'])) {
+            $options->topP($data['top_p']);
+        }
+
+        if (isset($data['top_logprobs'])) {
+            $options->topLogprobs($data['top_logprobs']);
+        }
+
+        if (isset($data['truncation'])) {
+            $options->truncation($data['truncation']);
+        }
+
+        if (isset($data['instructions'])) {
+            $options->instructions($data['instructions']);
+        }
+
+        if (isset($data['store'])) {
+            $options->store($data['store']);
+        }
+
+        if (isset($data['background'])) {
+            $options->background($data['background']);
+        }
+
+        return $options;
     }
 }

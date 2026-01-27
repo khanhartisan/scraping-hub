@@ -2,10 +2,13 @@
 
 namespace App\Contracts\FileVision;
 
+use App\Concerns\Serializable as SerializableTrait;
 use App\Contracts\Describable;
+use App\Contracts\Serializable;
 
-final class FileInformation implements Describable
+final class FileInformation implements Describable, Serializable
 {
+    use SerializableTrait;
     use \App\Concerns\Describable;
 
     protected string $filePath;
@@ -58,5 +61,54 @@ final class FileInformation implements Describable
     {
         $this->confidence = $confidence;
         return $this;
+    }
+
+    /**
+     * Convert the file information to an array representation.
+     *
+     * @return array<string, mixed>
+     */
+    public function toArray(): array
+    {
+        return [
+            'file_path' => $this->filePath ?? null,
+            'extension' => $this->extension ?? null,
+            'mime_type' => $this->mimeType ?? null,
+            'confidence' => $this->confidence ?? null,
+            'description' => $this->getDescription(),
+        ];
+    }
+
+    /**
+     * Create an instance from an array representation.
+     *
+     * @param  array<string, mixed>  $data
+     * @return static
+     */
+    public static function fromArray(array $data): static
+    {
+        $fileInfo = new static();
+
+        if (isset($data['file_path'])) {
+            $fileInfo->setFilePath($data['file_path']);
+        }
+
+        if (isset($data['extension'])) {
+            $fileInfo->setExtension($data['extension']);
+        }
+
+        if (isset($data['mime_type'])) {
+            $fileInfo->setMimeType($data['mime_type']);
+        }
+
+        if (isset($data['confidence'])) {
+            $fileInfo->setConfidence($data['confidence']);
+        }
+
+        if (isset($data['description'])) {
+            $fileInfo->setDescription($data['description']);
+        }
+
+        return $fileInfo;
     }
 }

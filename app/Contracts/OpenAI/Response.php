@@ -2,10 +2,13 @@
 
 namespace App\Contracts\OpenAI;
 
+use App\Concerns\Serializable as SerializableTrait;
+use App\Contracts\Serializable;
 use App\Enums\OpenAI\ResponseStatus;
 
-final class Response
+final class Response implements Serializable
 {
+    use SerializableTrait;
     protected string $id;
 
     protected int $createdAt;
@@ -30,9 +33,9 @@ final class Response
      *
      * @param  array<string, mixed>  $data
      */
-    public static function fromArray(array $data): self
+    public static function fromArray(array $data): static
     {
-        $response = new self();
+        $response = new static();
 
         $response->id = $data['id'] ?? '';
         $response->createdAt = $data['created_at'] ?? 0;
@@ -225,5 +228,24 @@ final class Response
     public function getTotalTokens(): ?int
     {
         return $this->usage['total_tokens'] ?? null;
+    }
+
+    /**
+     * Convert the response to an array representation.
+     *
+     * @return array<string, mixed>
+     */
+    public function toArray(): array
+    {
+        return [
+            'id' => $this->id,
+            'created_at' => $this->createdAt,
+            'status' => $this->status->value,
+            'completed_at' => $this->completedAt,
+            'error' => $this->error,
+            'model' => $this->model,
+            'output' => $this->output,
+            'usage' => $this->usage,
+        ];
     }
 }

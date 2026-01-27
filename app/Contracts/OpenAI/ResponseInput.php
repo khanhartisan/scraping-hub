@@ -2,8 +2,12 @@
 
 namespace App\Contracts\OpenAI;
 
-final class ResponseInput
+use App\Concerns\Serializable as SerializableTrait;
+use App\Contracts\Serializable;
+
+final class ResponseInput implements Serializable
 {
+    use SerializableTrait;
     /**
      * @var array<int, array<string, mixed>>
      */
@@ -182,5 +186,54 @@ final class ResponseInput
     public function isTextOnly(): bool
     {
         return ! $this->hasImages();
+    }
+
+    /**
+     * Create an instance from an array representation.
+     *
+     * @param  array<string, mixed>  $data
+     * @return static
+     */
+    public static function fromArray(array $data): static
+    {
+        $input = new static();
+
+        // Handle array of messages format
+        if (isset($data[0]) && is_array($data[0])) {
+            // Array of messages format
+            foreach ($data as $message) {
+                if (isset($message['role']) && isset($message['content'])) {
+                    $input->newMessage($message['role']);
+                    foreach ($message['content'] as $content) {
+                        if (($content['type'] ?? null) === 'input_text' && isset($content['text'])) {
+                            $input->addText($content['text']);
+                        } elseif (($content['type'] ?? null) === 'input_image') {
+                            if (isset($content['image_url'])) {
+                                $input->addImage($content['image_url'], $content['detail'] ?? null);
+                            } elseif (isset($content['file_id'])) {
+                                $input->addImageFromFileId($content['file_id'], $content['detail'] ?? null);
+                            }
+                        }
+                    }
+                }
+            }
+        } else {
+            // Single message format - treat as current content
+            foreach ($data as $content) {
+                if (is_array($content)) {
+                    if (($content['type'] ?? null) === 'input_text' && isset($content['text'])) {
+                        $input->addText($content['text']);
+                    } elseif (($content['type'] ?? null) === 'input_image') {
+                        if (isset($content['image_url'])) {
+                            $input->addImage($content['image_url'], $content['detail'] ?? null);
+                        } elseif (isset($content['file_id'])) {
+                            $input->addImageFromFileId($content['file_id'], $content['detail'] ?? null);
+                        }
+                    }
+                }
+            }
+        }
+
+        return $input;
     }
 }

@@ -2,13 +2,16 @@
 
 namespace App\Contracts\PageClassifier;
 
+use App\Concerns\Serializable as SerializableTrait;
 use App\Contracts\Describable;
+use App\Contracts\Serializable;
 use App\Enums\ContentType;
 use App\Enums\PageType;
 use App\Enums\Temporal;
 
-final class ClassificationResult implements Describable
+final class ClassificationResult implements Describable, Serializable
 {
+    use SerializableTrait;
     use \App\Concerns\Describable;
 
     protected ContentType $contentType;
@@ -120,5 +123,63 @@ final class ClassificationResult implements Describable
     {
         $this->temporal = $temporal;
         return $this;
+    }
+
+    /**
+     * Convert the classification result to an array representation.
+     *
+     * @return array<string, mixed>
+     */
+    public function toArray(): array
+    {
+        return [
+            'content_type' => $this->contentType?->value ?? null,
+            'page_type' => $this->pageType?->value ?? null,
+            'temporal' => $this->temporal?->value ?? null,
+            'tags' => $this->tags ?? [],
+            'description' => $this->getDescription(),
+        ];
+    }
+
+    /**
+     * Create an instance from an array representation.
+     *
+     * @param  array<string, mixed>  $data
+     * @return static
+     */
+    public static function fromArray(array $data): static
+    {
+        $result = new static();
+
+        if (isset($data['content_type'])) {
+            $contentType = ContentType::tryFrom($data['content_type']);
+            if ($contentType !== null) {
+                $result->setContentType($contentType);
+            }
+        }
+
+        if (isset($data['page_type'])) {
+            $pageType = PageType::tryFrom($data['page_type']);
+            if ($pageType !== null) {
+                $result->setPageType($pageType);
+            }
+        }
+
+        if (isset($data['temporal'])) {
+            $temporal = Temporal::tryFrom($data['temporal']);
+            if ($temporal !== null) {
+                $result->setTemporal($temporal);
+            }
+        }
+
+        if (isset($data['tags']) && is_array($data['tags'])) {
+            $result->setTags($data['tags']);
+        }
+
+        if (isset($data['description'])) {
+            $result->setDescription($data['description']);
+        }
+
+        return $result;
     }
 }

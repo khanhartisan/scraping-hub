@@ -4,6 +4,7 @@ namespace App\Services\PageClassifier;
 
 use App\Contracts\PageClassifier\ClassificationResult;
 use App\Contracts\PageClassifier\Classifier;
+use App\Utils\HtmlCleaner;
 
 abstract class PageClassifierService implements Classifier
 {
@@ -32,24 +33,9 @@ abstract class PageClassifierService implements Classifier
      */
     protected function prepareHtml(string $html): string
     {
-        // Remove script and style tags
-        $html = preg_replace('/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/mi', '', $html);
-        $html = preg_replace('/<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/mi', '', $html);
-
-        // Decode HTML entities
-        $html = html_entity_decode($html, ENT_QUOTES | ENT_HTML5, 'UTF-8');
-
-        // Remove excessive whitespace
-        $html = preg_replace('/\s+/', ' ', $html);
-        $html = trim($html);
-
-        // Limit HTML length to avoid token limits
         $maxLength = $this->config['max_html_length'] ?? 50000;
-        if (strlen($html) > $maxLength) {
-            $html = substr($html, 0, $maxLength) . '... [truncated]';
-        }
 
-        return $html;
+        return HtmlCleaner::clean($html, $maxLength);
     }
 
     /**

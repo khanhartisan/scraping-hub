@@ -2,9 +2,9 @@
 
 namespace App\Contracts\Scraper;
 
-use GuzzleHttp\Psr7\Response;
+use Psr\Http\Message\ResponseInterface;
 
 interface Scraper
 {
-    public function fetch(string $url, ?ScrapingOptions $options = null): Response;
+    public function fetch(string $url, ?ScrapingOptions $options = null): ResponseInterface;
 }

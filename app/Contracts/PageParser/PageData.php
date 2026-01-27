@@ -23,6 +23,11 @@ final class PageData implements Serializable
 
     protected ?Carbon $fetchedAt = null;
 
+    /**
+     * @var array<int, string>
+     */
+    protected array $linkedPageUrls = [];
+
     public function getTitle(): string
     {
         return $this->title;
@@ -101,6 +106,23 @@ final class PageData implements Serializable
     }
 
     /**
+     * @return array<int, string>
+     */
+    public function getLinkedPageUrls(): array
+    {
+        return $this->linkedPageUrls;
+    }
+
+    /**
+     * @param array<int, string> $linkedPageUrls
+     */
+    public function setLinkedPageUrls(array $linkedPageUrls): static
+    {
+        $this->linkedPageUrls = $linkedPageUrls;
+        return $this;
+    }
+
+    /**
      * Convert the page data to an array representation.
      *
      * @return array<string, mixed>
@@ -115,6 +137,7 @@ final class PageData implements Serializable
             'published_at' => $this->publishedAt?->toIso8601String(),
             'updated_at' => $this->updatedAt?->toIso8601String(),
             'fetched_at' => $this->fetchedAt?->toIso8601String(),
+            'linked_page_urls' => $this->linkedPageUrls,
         ];
     }
 
@@ -154,6 +177,10 @@ final class PageData implements Serializable
 
         if (isset($data['fetched_at'])) {
             $pageData->setFetchedAt($data['fetched_at'] ? Carbon::parse($data['fetched_at']) : null);
+        }
+
+        if (isset($data['linked_page_urls']) && is_array($data['linked_page_urls'])) {
+            $pageData->setLinkedPageUrls($data['linked_page_urls']);
         }
 
         return $pageData;

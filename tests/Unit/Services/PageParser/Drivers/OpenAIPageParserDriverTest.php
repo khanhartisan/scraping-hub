@@ -21,7 +21,7 @@ class OpenAIPageParserDriverTest extends TestCase
 
     public function test_it_parses_a_page_successfully(): void
     {
-        $html = '<html><head><title>Test Article</title><meta name="description" content="A test article"></head><body><h1>Test Article</h1><p>This is a test article content.</p></body></html>';
+        $html = '<html><head><title>Test Article</title><meta name="description" content="A test article"></head><body><h1>Test Article</h1><p>This is a test article content.</p><a href="https://example.com/related">Related Article</a></body></html>';
 
         $mockOpenAIClient = Mockery::mock(OpenAIClient::class);
         $mockResponse = ResponseObject::fromArray([
@@ -65,6 +65,9 @@ class OpenAIPageParserDriverTest extends TestCase
         $this->assertInstanceOf(Carbon::class, $result->getPublishedAt());
         $this->assertInstanceOf(Carbon::class, $result->getUpdatedAt());
         $this->assertInstanceOf(Carbon::class, $result->getFetchedAt());
+        // Verify linked URLs are extracted
+        $this->assertIsArray($result->getLinkedPageUrls());
+        $this->assertContains('https://example.com/related', $result->getLinkedPageUrls());
     }
 
     public function test_it_parses_page_without_dates(): void
@@ -686,5 +689,265 @@ class OpenAIPageParserDriverTest extends TestCase
         $this->assertInstanceOf(PageData::class, $result);
         $this->assertNull($result->getPublishedAt());
         $this->assertNull($result->getUpdatedAt());
+    }
+
+    public function test_it_extracts_linked_page_urls_from_html(): void
+    {
+        $html = '<html><body><h1>Test</h1><a href="https://example.com/page1">Link 1</a><a href="https://example.com/page2">Link 2</a><a href="/relative/path">Relative</a></body></html>';
+
+        $mockOpenAIClient = Mockery::mock(OpenAIClient::class);
+        $mockResponse = ResponseObject::fromArray([
+            'id' => 'resp_123',
+            'status' => 'completed',
+            'output' => [
+                [
+                    'type' => 'message',
+                    'content' => [
+                        [
+                            'type' => 'output_text',
+                            'text' => json_encode([
+                                'title' => 'Test',
+                                'excerpt' => 'Test excerpt',
+                                'thumbnailUrl' => '',
+                                'markdownContent' => '# Test',
+                            ]),
+                        ],
+                    ],
+                ],
+            ],
+        ]);
+
+        $mockOpenAIClient->shouldReceive('createResponse')
+            ->once()
+            ->andReturn($mockResponse);
+
+        $this->app->instance(OpenAIClient::class, $mockOpenAIClient);
+
+        $driver = new OpenAIPageParserDriver(['model' => 'gpt-4o-mini']);
+
+        $result = $driver->parse($html);
+
+        $linkedUrls = $result->getLinkedPageUrls();
+        $this->assertIsArray($linkedUrls);
+        $this->assertContains('https://example.com/page1', $linkedUrls);
+        $this->assertContains('https://example.com/page2', $linkedUrls);
+        $this->assertContains('/relative/path', $linkedUrls);
+        $this->assertCount(3, $linkedUrls);
+    }
+
+    public function test_it_filters_out_anchor_links(): void
+    {
+        $html = '<html><body><a href="#section1">Anchor</a><a href="https://example.com/page1">Real Link</a></body></html>';
+
+        $mockOpenAIClient = Mockery::mock(OpenAIClient::class);
+        $mockResponse = ResponseObject::fromArray([
+            'id' => 'resp_123',
+            'status' => 'completed',
+            'output' => [
+                [
+                    'type' => 'message',
+                    'content' => [
+                        [
+                            'type' => 'output_text',
+                            'text' => json_encode([
+                                'title' => 'Test',
+                                'excerpt' => 'Test excerpt',
+                                'thumbnailUrl' => '',
+                                'markdownContent' => '# Test',
+                            ]),
+                        ],
+                    ],
+                ],
+            ],
+        ]);
+
+        $mockOpenAIClient->shouldReceive('createResponse')
+            ->once()
+            ->andReturn($mockResponse);
+
+        $this->app->instance(OpenAIClient::class, $mockOpenAIClient);
+
+        $driver = new OpenAIPageParserDriver(['model' => 'gpt-4o-mini']);
+
+        $result = $driver->parse($html);
+
+        $linkedUrls = $result->getLinkedPageUrls();
+        $this->assertNotContains('#section1', $linkedUrls);
+        $this->assertContains('https://example.com/page1', $linkedUrls);
+    }
+
+    public function test_it_filters_out_javascript_and_data_urls(): void
+    {
+        $html = '<html><body><a href="javascript:void(0)">JS Link</a><a href="data:text/html,test">Data Link</a><a href="https://example.com/page1">Real Link</a></body></html>';
+
+        $mockOpenAIClient = Mockery::mock(OpenAIClient::class);
+        $mockResponse = ResponseObject::fromArray([
+            'id' => 'resp_123',
+            'status' => 'completed',
+            'output' => [
+                [
+                    'type' => 'message',
+                    'content' => [
+                        [
+                            'type' => 'output_text',
+                            'text' => json_encode([
+                                'title' => 'Test',
+                                'excerpt' => 'Test excerpt',
+                                'thumbnailUrl' => '',
+                                'markdownContent' => '# Test',
+                            ]),
+                        ],
+                    ],
+                ],
+            ],
+        ]);
+
+        $mockOpenAIClient->shouldReceive('createResponse')
+            ->once()
+            ->andReturn($mockResponse);
+
+        $this->app->instance(OpenAIClient::class, $mockOpenAIClient);
+
+        $driver = new OpenAIPageParserDriver(['model' => 'gpt-4o-mini']);
+
+        $result = $driver->parse($html);
+
+        $linkedUrls = $result->getLinkedPageUrls();
+        $this->assertNotContains('javascript:void(0)', $linkedUrls);
+        $this->assertNotContains('data:text/html,test', $linkedUrls);
+        $this->assertContains('https://example.com/page1', $linkedUrls);
+    }
+
+    public function test_it_handles_html_without_links(): void
+    {
+        $html = '<html><body><h1>Test</h1><p>No links here</p></body></html>';
+
+        $mockOpenAIClient = Mockery::mock(OpenAIClient::class);
+        $mockResponse = ResponseObject::fromArray([
+            'id' => 'resp_123',
+            'status' => 'completed',
+            'output' => [
+                [
+                    'type' => 'message',
+                    'content' => [
+                        [
+                            'type' => 'output_text',
+                            'text' => json_encode([
+                                'title' => 'Test',
+                                'excerpt' => 'Test excerpt',
+                                'thumbnailUrl' => '',
+                                'markdownContent' => '# Test',
+                            ]),
+                        ],
+                    ],
+                ],
+            ],
+        ]);
+
+        $mockOpenAIClient->shouldReceive('createResponse')
+            ->once()
+            ->andReturn($mockResponse);
+
+        $this->app->instance(OpenAIClient::class, $mockOpenAIClient);
+
+        $driver = new OpenAIPageParserDriver(['model' => 'gpt-4o-mini']);
+
+        $result = $driver->parse($html);
+
+        $this->assertIsArray($result->getLinkedPageUrls());
+        $this->assertEmpty($result->getLinkedPageUrls());
+    }
+
+    public function test_it_deduplicates_duplicate_urls(): void
+    {
+        $html = '<html><body><a href="https://example.com/page1">Link 1</a><a href="https://example.com/page1">Link 1 Again</a><a href="https://example.com/page2">Link 2</a></body></html>';
+
+        $mockOpenAIClient = Mockery::mock(OpenAIClient::class);
+        $mockResponse = ResponseObject::fromArray([
+            'id' => 'resp_123',
+            'status' => 'completed',
+            'output' => [
+                [
+                    'type' => 'message',
+                    'content' => [
+                        [
+                            'type' => 'output_text',
+                            'text' => json_encode([
+                                'title' => 'Test',
+                                'excerpt' => 'Test excerpt',
+                                'thumbnailUrl' => '',
+                                'markdownContent' => '# Test',
+                            ]),
+                        ],
+                    ],
+                ],
+            ],
+        ]);
+
+        $mockOpenAIClient->shouldReceive('createResponse')
+            ->once()
+            ->andReturn($mockResponse);
+
+        $this->app->instance(OpenAIClient::class, $mockOpenAIClient);
+
+        $driver = new OpenAIPageParserDriver(['model' => 'gpt-4o-mini']);
+
+        $result = $driver->parse($html);
+
+        $linkedUrls = $result->getLinkedPageUrls();
+        $this->assertCount(2, $linkedUrls);
+        $this->assertContains('https://example.com/page1', $linkedUrls);
+        $this->assertContains('https://example.com/page2', $linkedUrls);
+    }
+
+    public function test_it_extracts_urls_from_original_html_before_truncation(): void
+    {
+        // Create HTML with many links, some of which might be truncated
+        $links = [];
+        for ($i = 1; $i <= 100; $i++) {
+            $links[] = '<a href="https://example.com/page' . $i . '">Link ' . $i . '</a>';
+        }
+        $html = '<html><body><h1>Test</h1>' . implode('', $links) . '</body></html>';
+
+        $mockOpenAIClient = Mockery::mock(OpenAIClient::class);
+        $mockResponse = ResponseObject::fromArray([
+            'id' => 'resp_123',
+            'status' => 'completed',
+            'output' => [
+                [
+                    'type' => 'message',
+                    'content' => [
+                        [
+                            'type' => 'output_text',
+                            'text' => json_encode([
+                                'title' => 'Test',
+                                'excerpt' => 'Test excerpt',
+                                'thumbnailUrl' => '',
+                                'markdownContent' => '# Test',
+                            ]),
+                        ],
+                    ],
+                ],
+            ],
+        ]);
+
+        $mockOpenAIClient->shouldReceive('createResponse')
+            ->once()
+            ->andReturn($mockResponse);
+
+        $this->app->instance(OpenAIClient::class, $mockOpenAIClient);
+
+        $driver = new OpenAIPageParserDriver([
+            'model' => 'gpt-4o-mini',
+            'max_html_length' => 1000, // Small limit to ensure truncation
+        ]);
+
+        $result = $driver->parse($html);
+
+        // Should extract all URLs even if HTML is truncated
+        $linkedUrls = $result->getLinkedPageUrls();
+        $this->assertGreaterThan(0, count($linkedUrls));
+        // Verify we got URLs from the original HTML
+        $this->assertContains('https://example.com/page1', $linkedUrls);
     }
 }

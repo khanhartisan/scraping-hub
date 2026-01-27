@@ -162,4 +162,339 @@ class HtmlCleanerTest extends TestCase
         $this->assertLessThanOrEqual($customMaxLength + strlen('... [truncated]'), strlen($result));
         $this->assertStringEndsWith('... [truncated]', $result);
     }
+
+    public function test_minify_removes_html_comments(): void
+    {
+        $html = '<html><body><!-- This is a comment --><h1>Title</h1></body></html>';
+
+        $result = HtmlCleaner::minify($html);
+
+        $this->assertStringNotContainsString('<!--', $result);
+        $this->assertStringNotContainsString('-->', $result);
+        $this->assertStringContainsString('Title', $result);
+    }
+
+    public function test_minify_removes_multiline_comments(): void
+    {
+        $html = '<html><body><!-- This is a multi-line comment
+        with multiple lines --><h1>Title</h1></body></html>';
+
+        $result = HtmlCleaner::minify($html);
+
+        $this->assertStringNotContainsString('<!--', $result);
+        $this->assertStringContainsString('Title', $result);
+    }
+
+    public function test_minify_removes_empty_tags(): void
+    {
+        $html = '<html><body><p></p><div></div><h1>Title</h1><span></span></body></html>';
+
+        $result = HtmlCleaner::minify($html);
+
+        $this->assertStringNotContainsString('<p></p>', $result);
+        $this->assertStringNotContainsString('<div></div>', $result);
+        $this->assertStringNotContainsString('<span></span>', $result);
+        $this->assertStringContainsString('Title', $result);
+    }
+
+    public function test_minify_removes_empty_tags_with_attributes(): void
+    {
+        $html = '<html><body><p class="empty"></p><div id="test"></div><h1>Title</h1></body></html>';
+
+        $result = HtmlCleaner::minify($html);
+
+        // Empty tags with attributes should also be removed
+        $this->assertStringNotContainsString('<p class="empty"></p>', $result);
+        $this->assertStringNotContainsString('<div id="test"></div>', $result);
+        $this->assertStringContainsString('Title', $result);
+    }
+
+    public function test_minify_compresses_whitespace_aggressively(): void
+    {
+        $html = "<html>\n\n<body>\n\t<h1>   Title   </h1>\n\t<p>   Content   </p>\n</body>\n</html>";
+
+        $result = HtmlCleaner::minify($html);
+
+        // Should have no newlines or tabs
+        $this->assertStringNotContainsString("\n", $result);
+        $this->assertStringNotContainsString("\t", $result);
+        // Should have minimal spaces
+        $this->assertStringContainsString('Title', $result);
+        $this->assertStringContainsString('Content', $result);
+    }
+
+    public function test_minify_removes_whitespace_around_tags(): void
+    {
+        $html = '<html> <body> <h1> Title </h1> <p> Content </p> </body> </html>';
+
+        $result = HtmlCleaner::minify($html);
+
+        // Should remove spaces around tags
+        $this->assertStringNotContainsString('> <', $result);
+        $this->assertStringNotContainsString(' </', $result);
+        $this->assertStringContainsString('Title', $result);
+        $this->assertStringContainsString('Content', $result);
+    }
+
+    public function test_minify_applies_all_size_reduction_techniques(): void
+    {
+        $html = '<html><head><!-- This is a comment --><style>body { color: red; }</style><script>alert("test");</script></head><body><p></p><div></div><h1>   Title   </h1><p>   Content   </p><span></span></body></html>';
+
+        $minified = HtmlCleaner::minify($html);
+
+        // Verify minify applies all reduction techniques
+        $this->assertStringNotContainsString('<!--', $minified); // Comments removed
+        $this->assertStringNotContainsString('<script>', $minified); // Scripts removed
+        $this->assertStringNotContainsString('<style>', $minified); // Styles removed
+        $this->assertStringNotContainsString('<p></p>', $minified); // Empty tags removed
+        $this->assertStringNotContainsString('<div></div>', $minified); // Empty tags removed
+        $this->assertStringNotContainsString('<span></span>', $minified); // Empty tags removed
+        $this->assertStringNotContainsString('> <', $minified); // Whitespace around tags removed
+        $this->assertStringContainsString('Title', $minified); // Content preserved
+        $this->assertStringContainsString('Content', $minified); // Content preserved
+    }
+
+    public function test_minify_preserves_content_structure(): void
+    {
+        $html = '<html><body><!-- Comment --><h1>Title</h1><p>Paragraph with <strong>bold</strong> text.</p><div></div></body></html>';
+
+        $result = HtmlCleaner::minify($html);
+
+        $this->assertStringContainsString('Title', $result);
+        $this->assertStringContainsString('Paragraph', $result);
+        $this->assertStringContainsString('bold', $result);
+        $this->assertStringNotContainsString('<!--', $result);
+        $this->assertStringNotContainsString('<div></div>', $result);
+    }
+
+    public function test_minify_handles_nested_empty_tags(): void
+    {
+        $html = '<html><body><div><p></p><span></span></div><h1>Title</h1></body></html>';
+
+        $result = HtmlCleaner::minify($html);
+
+        $this->assertStringNotContainsString('<p></p>', $result);
+        $this->assertStringNotContainsString('<span></span>', $result);
+        $this->assertStringContainsString('Title', $result);
+    }
+
+    public function test_minify_respects_max_length(): void
+    {
+        $html = str_repeat('<p>Content paragraph</p>', 10000);
+        $maxLength = 1000;
+
+        $result = HtmlCleaner::minify($html, $maxLength);
+
+        $this->assertLessThanOrEqual($maxLength + strlen('... [truncated]'), strlen($result));
+        $this->assertStringEndsWith('... [truncated]', $result);
+    }
+
+    public function test_minify_removes_scripts_and_styles(): void
+    {
+        $html = '<html><head><script>alert("test");</script><style>body { color: red; }</style></head><body>Content</body></html>';
+
+        $result = HtmlCleaner::minify($html);
+
+        $this->assertStringNotContainsString('<script>', $result);
+        $this->assertStringNotContainsString('<style>', $result);
+        $this->assertStringContainsString('Content', $result);
+    }
+
+    public function test_minify_decodes_html_entities(): void
+    {
+        $html = '<html><body>&lt;div&gt;Content&lt;/div&gt;</body></html>';
+
+        $result = HtmlCleaner::minify($html);
+
+        $this->assertStringContainsString('<div>Content</div>', $result);
+        $this->assertStringNotContainsString('&lt;', $result);
+        $this->assertStringNotContainsString('&gt;', $result);
+    }
+
+    public function test_minify_handles_empty_html(): void
+    {
+        $html = '';
+
+        $result = HtmlCleaner::minify($html);
+
+        $this->assertEquals('', $result);
+    }
+
+    public function test_minify_handles_html_with_only_comments_and_empty_tags(): void
+    {
+        $html = '<!-- Comment --><p></p><div></div>';
+
+        $result = HtmlCleaner::minify($html);
+
+        // Should return empty or whitespace-only string
+        $this->assertEmpty(trim($result));
+    }
+
+    public function test_minify_removes_whitespace_between_tags(): void
+    {
+        $html = '<div> </div> <p> </p> <span>Content</span>';
+
+        $result = HtmlCleaner::minify($html);
+
+        // Should remove spaces between tags
+        $this->assertStringNotContainsString('> <', $result);
+        $this->assertStringContainsString('Content', $result);
+    }
+
+    public function test_sanitize_removes_all_attributes(): void
+    {
+        $html = '<div class="container" id="main" data-test="value"><p class="text">Content</p></div>';
+
+        $result = HtmlCleaner::sanitize($html);
+
+        $this->assertStringNotContainsString('class=', $result);
+        $this->assertStringNotContainsString('id=', $result);
+        $this->assertStringNotContainsString('data-test=', $result);
+        $this->assertStringContainsString('<div>', $result);
+        $this->assertStringContainsString('<p>', $result);
+        $this->assertStringContainsString('Content', $result);
+    }
+
+    public function test_sanitize_removes_attributes_from_self_closing_tags(): void
+    {
+        $html = '<img src="image.jpg" alt="Image" class="photo" /><br class="clear" />';
+
+        $result = HtmlCleaner::sanitize($html);
+
+        $this->assertStringNotContainsString('src=', $result);
+        $this->assertStringNotContainsString('alt=', $result);
+        $this->assertStringNotContainsString('class=', $result);
+        // Self-closing tags should preserve the / but remove attributes
+        $this->assertStringContainsString('<img', $result);
+        $this->assertStringContainsString('<br', $result);
+        // Verify no attributes remain
+        $this->assertStringNotContainsString('image.jpg', $result);
+        $this->assertStringNotContainsString('Image', $result);
+    }
+
+    public function test_sanitize_extends_minify_functionality(): void
+    {
+        $html = '<html><!-- Comment --><head><style>body { color: red; }</style></head><body class="page" id="main"><p class="text"></p><h1 class="title">Title</h1></body></html>';
+
+        $result = HtmlCleaner::sanitize($html);
+
+        // Should have all minify features
+        $this->assertStringNotContainsString('<!--', $result); // Comments removed
+        $this->assertStringNotContainsString('<style>', $result); // Styles removed
+        $this->assertStringNotContainsString('<p></p>', $result); // Empty tags removed
+        
+        // Should also remove attributes
+        $this->assertStringNotContainsString('class=', $result);
+        $this->assertStringNotContainsString('id=', $result);
+        
+        // Content should be preserved
+        $this->assertStringContainsString('Title', $result);
+    }
+
+    public function test_sanitize_removes_complex_attributes(): void
+    {
+        $html = '<div class="container" data-id="123" onclick="alert(\'test\')" style="color: red;"><span class="text" aria-label="Label">Content</span></div>';
+
+        $result = HtmlCleaner::sanitize($html);
+
+        $this->assertStringNotContainsString('class=', $result);
+        $this->assertStringNotContainsString('data-id=', $result);
+        $this->assertStringNotContainsString('onclick=', $result);
+        $this->assertStringNotContainsString('style=', $result);
+        $this->assertStringNotContainsString('aria-label=', $result);
+        $this->assertStringContainsString('<div>', $result);
+        $this->assertStringContainsString('<span>', $result);
+        $this->assertStringContainsString('Content', $result);
+    }
+
+    public function test_sanitize_preserves_content_structure(): void
+    {
+        $html = '<html><body><h1 class="title">Title</h1><p class="text">Paragraph with <strong class="bold">bold</strong> text.</p></body></html>';
+
+        $result = HtmlCleaner::sanitize($html);
+
+        $this->assertStringContainsString('Title', $result);
+        $this->assertStringContainsString('Paragraph', $result);
+        $this->assertStringContainsString('bold', $result);
+        $this->assertStringNotContainsString('class=', $result);
+    }
+
+    public function test_sanitize_handles_nested_tags_with_attributes(): void
+    {
+        $html = '<div class="outer"><div class="inner" id="inner"><p class="text">Content</p></div></div>';
+
+        $result = HtmlCleaner::sanitize($html);
+
+        $this->assertStringNotContainsString('class=', $result);
+        $this->assertStringNotContainsString('id=', $result);
+        $this->assertStringContainsString('<div>', $result);
+        $this->assertStringContainsString('<p>', $result);
+        $this->assertStringContainsString('Content', $result);
+    }
+
+    public function test_sanitize_respects_max_length(): void
+    {
+        $html = str_repeat('<p class="text">Content paragraph</p>', 10000);
+        $maxLength = 1000;
+
+        $result = HtmlCleaner::sanitize($html, $maxLength);
+
+        $this->assertLessThanOrEqual($maxLength + strlen('... [truncated]'), strlen($result));
+        $this->assertStringEndsWith('... [truncated]', $result);
+    }
+
+    public function test_sanitize_handles_empty_html(): void
+    {
+        $html = '';
+
+        $result = HtmlCleaner::sanitize($html);
+
+        $this->assertEquals('', $result);
+    }
+
+    public function test_sanitize_removes_attributes_with_single_quotes(): void
+    {
+        $html = "<div class='container' id='main'><p class='text'>Content</p></div>";
+
+        $result = HtmlCleaner::sanitize($html);
+
+        $this->assertStringNotContainsString("class='", $result);
+        $this->assertStringNotContainsString("id='", $result);
+        $this->assertStringContainsString('<div>', $result);
+        $this->assertStringContainsString('<p>', $result);
+        $this->assertStringContainsString('Content', $result);
+    }
+
+    public function test_sanitize_removes_attributes_without_quotes(): void
+    {
+        $html = '<div class=container id=main><p class=text>Content</p></div>';
+
+        $result = HtmlCleaner::sanitize($html);
+
+        $this->assertStringNotContainsString('class=', $result);
+        $this->assertStringNotContainsString('id=', $result);
+        $this->assertStringContainsString('<div>', $result);
+        $this->assertStringContainsString('<p>', $result);
+        $this->assertStringContainsString('Content', $result);
+    }
+
+    public function test_sanitize_removes_attributes_that_minify_preserves(): void
+    {
+        $html = '<div class="container" id="main" data-test="value"><p class="text">Content</p></div>';
+
+        $minified = HtmlCleaner::minify($html);
+        $sanitized = HtmlCleaner::sanitize($html);
+
+        // Verify sanitize actually removed attributes
+        $this->assertStringNotContainsString('class=', $sanitized);
+        $this->assertStringNotContainsString('id=', $sanitized);
+        $this->assertStringNotContainsString('data-test=', $sanitized);
+        
+        // Minify should preserve attributes
+        $this->assertStringContainsString('class=', $minified);
+        
+        // Content should be preserved in both
+        $this->assertStringContainsString('Content', $sanitized);
+        $this->assertStringContainsString('Content', $minified);
+    }
 }

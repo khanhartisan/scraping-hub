@@ -2,8 +2,11 @@
 
 namespace App\Models;
 
+use App\Enums\ContentType;
 use App\Enums\EntityType;
+use App\Enums\PageType;
 use App\Enums\ScrapingStatus;
+use App\Enums\Temporal;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -14,6 +17,12 @@ class Entity extends Model
     protected $casts = [
         'type' => EntityType::class,
         'scraping_status' => ScrapingStatus::class,
+        'page_type' => PageType::class,
+        'content_type' => ContentType::class,
+        'temporal' => Temporal::class,
+        'source_published_at' => 'datetime',
+        'source_updated_at' => 'datetime',
+        'fetched_at' => 'datetime',
     ];
 
     public function source(): BelongsTo

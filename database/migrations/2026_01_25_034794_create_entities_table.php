@@ -32,6 +32,7 @@ return new class extends Migration
             $table->dateTime('source_published_at')->nullable();
             $table->dateTime('source_updated_at')->nullable();
             $table->dateTime('fetched_at')->nullable();
+            $table->dateTime('next_scrape_at')->nullable();
 
             // Indexes
             $table->index(['source_id', 'type', 'source_published_at'], 'source_index');

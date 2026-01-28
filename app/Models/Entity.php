@@ -23,6 +23,7 @@ class Entity extends Model
         'source_published_at' => 'datetime',
         'source_updated_at' => 'datetime',
         'fetched_at' => 'datetime',
+        'next_scrape_at' => 'datetime',
     ];
 
     public function source(): BelongsTo

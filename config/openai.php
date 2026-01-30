@@ -32,7 +32,7 @@ return [
 
         'openai' => [
             'api_key' => env('OPENAI_API_KEY'),
-            'base_url' => env('OPENAI_BASE_URL', 'https://api.openai.com/v1'),
+            'base_url' => env('OPENAI_BASE_URL', 'https://api.openai.com/v1/'),
             'default_model' => env('OPENAI_DEFAULT_MODEL', 'gpt-4o-mini'),
             'timeout' => env('OPENAI_TIMEOUT', 60),
             'beta_header' => env('OPENAI_BETA_HEADER', 'responses=v1'),
@@ -40,7 +40,7 @@ return [
 
         'grok' => [
             'api_key' => env('GROK_API_KEY'),
-            'base_url' => env('GROK_BASE_URL', 'https://api.x.ai/v1'),
+            'base_url' => env('GROK_BASE_URL', 'https://api.x.ai/v1/'),
             'default_model' => env('GROK_DEFAULT_MODEL', 'grok-beta'),
             'timeout' => env('GROK_TIMEOUT', 60),
             'beta_header' => env('GROK_BETA_HEADER', null),

@@ -23,7 +23,7 @@ class OpenAIService implements OpenAIClient
     public function __construct(array $config = [])
     {
         $this->apiKey = $config['api_key'] ?? '';
-        $this->baseUrl = $config['base_url'] ?? 'https://api.openai.com/v1';
+        $this->baseUrl = $config['base_url'] ?? 'https://api.openai.com/v1/';
         $this->defaultModel = $config['default_model'] ?? 'gpt-4o-mini';
 
         $headers = [
@@ -51,7 +51,7 @@ class OpenAIService implements OpenAIClient
         $payload = $this->buildPayload($input, $options);
 
         try {
-            $response = $this->client->post('/responses', [
+            $response = $this->client->post('responses', [
                 'json' => $payload,
             ]);
 
@@ -74,7 +74,7 @@ class OpenAIService implements OpenAIClient
     public function getResponse(string $responseId): ResponseObject
     {
         try {
-            $response = $this->client->get("/responses/{$responseId}");
+            $response = $this->client->get("responses/{$responseId}");
 
             $data = json_decode($response->getBody()->getContents(), true);
 
@@ -95,7 +95,7 @@ class OpenAIService implements OpenAIClient
     public function cancelResponse(string $responseId): ResponseObject
     {
         try {
-            $response = $this->client->post("/responses/{$responseId}/cancel", []);
+            $response = $this->client->post("responses/{$responseId}/cancel", []);
 
             $data = json_decode($response->getBody()->getContents(), true);
 
@@ -116,7 +116,7 @@ class OpenAIService implements OpenAIClient
     public function deleteResponse(string $responseId): ResponseObject
     {
         try {
-            $response = $this->client->delete("/responses/{$responseId}");
+            $response = $this->client->delete("responses/{$responseId}");
 
             $data = json_decode($response->getBody()->getContents(), true);
 

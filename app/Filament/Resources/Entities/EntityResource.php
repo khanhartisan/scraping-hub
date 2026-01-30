@@ -62,8 +62,12 @@ class EntityResource extends Resource
             ->columns([
                 TextColumn::make('source.base_url')->limit(40)->sortable(),
                 TextColumn::make('url')->limit(50)->searchable(),
-                TextColumn::make('type')->badge(),
-                TextColumn::make('scraping_status')->badge(),
+                TextColumn::make('type')
+                    ->badge()
+                    ->formatStateUsing(fn ($state) => $state?->getLabel() ?? (string) $state),
+                TextColumn::make('scraping_status')
+                    ->badge()
+                    ->formatStateUsing(fn ($state) => $state?->getLabel() ?? (string) $state),
                 TextColumn::make('fetched_at')->dateTime()->sortable(),
             ])
             ->filters([

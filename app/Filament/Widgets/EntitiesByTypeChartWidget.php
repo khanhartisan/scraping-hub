@@ -36,7 +36,7 @@ class EntitiesByTypeChartWidget extends ChartWidget
         $data = [];
 
         foreach (EntityType::cases() as $type) {
-            $labels[] = $type->name;
+            $labels[] = $type->getLabel() ?? $type->name;
             $data[] = $counts[$type->value] ?? 0;
         }
 

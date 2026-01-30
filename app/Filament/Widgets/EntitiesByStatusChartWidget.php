@@ -45,7 +45,7 @@ class EntitiesByStatusChartWidget extends ChartWidget
         ];
 
         foreach (ScrapingStatus::cases() as $i => $status) {
-            $labels[] = $status->name;
+            $labels[] = $status->getLabel() ?? $status->name;
             $data[] = $counts[$status->value] ?? 0;
         }
 

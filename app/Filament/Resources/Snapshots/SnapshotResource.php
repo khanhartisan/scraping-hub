@@ -51,7 +51,9 @@ class SnapshotResource extends Resource
             ->columns([
                 TextColumn::make('entity.url')->limit(40)->sortable(),
                 TextColumn::make('version')->sortable(),
-                TextColumn::make('scraping_status')->badge(),
+                TextColumn::make('scraping_status')
+                    ->badge()
+                    ->formatStateUsing(fn ($state) => $state?->getLabel() ?? (string) $state),
                 TextColumn::make('content_length')->sortable(),
                 TextColumn::make('created_at')->dateTime()->sortable(),
             ])

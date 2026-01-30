@@ -15,6 +15,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 class Entity extends Model
 {
     protected $casts = [
+        'canonical_number' => 'integer',
         'type' => EntityType::class,
         'scraping_status' => ScrapingStatus::class,
         'page_type' => PageType::class,
@@ -25,6 +26,16 @@ class Entity extends Model
         'fetched_at' => 'datetime',
         'next_scrape_at' => 'datetime',
     ];
+
+    public function canonicalEntity(): BelongsTo
+    {
+        return $this->belongsTo(static::class, 'canonical_entity_id');
+    }
+
+    public function aliasEntities(): HasMany
+    {
+        return $this->hasMany(static::class, 'canonical_entity_id');
+    }
 
     public function source(): BelongsTo
     {

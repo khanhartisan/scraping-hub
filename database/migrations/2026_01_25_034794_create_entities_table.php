@@ -14,10 +14,15 @@ return new class extends Migration
         Schema::create('entities', function (Blueprint $table) {
             $table->ulid('id')->primary();
             $table->ulid('source_id');
+
+            $table->ulid('canonical_entity_id')->nullable();
+            $table->unsignedBigInteger('canonical_number')->default(0);
+
             $table->unsignedTinyInteger('type')->default(\App\Enums\EntityType::UNCLASSIFIED->value);
             $table->unsignedTinyInteger('scraping_status')->default(\App\Enums\ScrapingStatus::PENDING->value);
 
             $table->text('url');
+            $table->char('url_hash', 40); // use sha1
 
             $table->string('description', 1024)->nullable();
 
@@ -35,7 +40,11 @@ return new class extends Migration
             $table->dateTime('next_scrape_at')->nullable();
 
             // Indexes
+            $table->index(['scraping_status', 'updated_at']);
             $table->index(['source_id', 'type', 'source_published_at'], 'source_index');
+            $table->index(['source_id', 'next_scrape_at']);
+            $table->index(['url_hash', 'source_id']);
+            $table->index(['canonical_entity_id', 'canonical_number']);
         });
     }
 

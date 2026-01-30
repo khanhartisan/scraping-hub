@@ -23,6 +23,18 @@ return new class extends Migration
             $table->string('file_extension')->nullable();
 
             $table->unsignedInteger('version')->default(0);
+
+            // Base metrics for policy calculation
+            $table->unsignedInteger('content_length')->nullable();
+            $table->unsignedInteger('structured_data_count')->default(0);
+            $table->unsignedInteger('media_count')->default(0);
+            $table->unsignedInteger('link_count')->default(0);
+            $table->decimal('content_change_percentage', 5, 2)->nullable();
+
+            // Cost metrics for cost_factor calculation
+            $table->unsignedInteger('fetch_duration_ms')->nullable();
+            $table->decimal('cost', 3, 2)->nullable();
+
             $table->timestamps();
         });
     }

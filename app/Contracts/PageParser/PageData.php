@@ -23,6 +23,10 @@ final class PageData implements Serializable
 
     protected ?Carbon $fetchedAt = null;
 
+    protected string $canonicalUrl = '';
+
+    protected ?int $canonicalNumber = null;
+
     /**
      * @var array<int, string>
      */
@@ -105,6 +109,28 @@ final class PageData implements Serializable
         return $this;
     }
 
+    public function getCanonicalUrl(): string
+    {
+        return $this->canonicalUrl;
+    }
+
+    public function setCanonicalUrl(string $canonicalUrl): static
+    {
+        $this->canonicalUrl = $canonicalUrl;
+        return $this;
+    }
+
+    public function getCanonicalNumber(): ?int
+    {
+        return $this->canonicalNumber;
+    }
+
+    public function setCanonicalNumber(?int $canonicalNumber): static
+    {
+        $this->canonicalNumber = $canonicalNumber;
+        return $this;
+    }
+
     /**
      * @return array<int, string>
      */
@@ -137,6 +163,8 @@ final class PageData implements Serializable
             'published_at' => $this->publishedAt?->toIso8601String(),
             'updated_at' => $this->updatedAt?->toIso8601String(),
             'fetched_at' => $this->fetchedAt?->toIso8601String(),
+            'canonical_url' => $this->canonicalUrl,
+            'canonical_number' => $this->canonicalNumber,
             'linked_page_urls' => $this->linkedPageUrls,
         ];
     }
@@ -177,6 +205,14 @@ final class PageData implements Serializable
 
         if (isset($data['fetched_at'])) {
             $pageData->setFetchedAt($data['fetched_at'] ? Carbon::parse($data['fetched_at']) : null);
+        }
+
+        if (isset($data['canonical_url'])) {
+            $pageData->setCanonicalUrl($data['canonical_url']);
+        }
+
+        if (isset($data['canonical_number'])) {
+            $pageData->setCanonicalNumber($data['canonical_number'] !== null ? (int) $data['canonical_number'] : null);
         }
 
         if (isset($data['linked_page_urls']) && is_array($data['linked_page_urls'])) {

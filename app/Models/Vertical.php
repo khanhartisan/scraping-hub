@@ -15,4 +15,11 @@ class Vertical extends Model
             ->using(EntityVertical::class)
             ->as('entity_vertical');
     }
+
+    public function sources(): BelongsToMany
+    {
+        return $this->belongsToMany(Source::class)
+            ->using(SourceVertical::class)
+            ->as('source_vertical');
+    }
 }

@@ -11,10 +11,15 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('sources', function (Blueprint $table) {
+        Schema::create('source_vertical', function (Blueprint $table) {
             $table->ulid('id')->primary();
-            $table->unsignedTinyInteger('authority_score')->default(0);
+            $table->ulid('source_id');
+            $table->ulid('vertical_id');
+            $table->decimal('relevance', 3, 2)->default(0.00);
             $table->timestamps();
+
+            $table->unique(['source_id', 'vertical_id']);
+            $table->index(['vertical_id', 'id']);
         });
     }
 
@@ -23,6 +28,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('sources');
+        Schema::dropIfExists('source_vertical');
     }
 };

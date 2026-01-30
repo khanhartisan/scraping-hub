@@ -40,6 +40,8 @@ class OpenAIPageParserDriverTest extends TestCase
                                 'markdownContent' => '# Test Article\n\nThis is a test article content.',
                                 'publishedAt' => '2024-01-15T10:30:00Z',
                                 'updatedAt' => '2024-01-20T14:45:00Z',
+                                'canonicalUrl' => 'https://example.com/article',
+                                'canonicalNumber' => null,
                             ]),
                         ],
                     ],
@@ -65,6 +67,8 @@ class OpenAIPageParserDriverTest extends TestCase
         $this->assertInstanceOf(Carbon::class, $result->getPublishedAt());
         $this->assertInstanceOf(Carbon::class, $result->getUpdatedAt());
         $this->assertInstanceOf(Carbon::class, $result->getFetchedAt());
+        $this->assertEquals('https://example.com/article', $result->getCanonicalUrl());
+        $this->assertNull($result->getCanonicalNumber());
         // Verify linked URLs are extracted
         $this->assertIsArray($result->getLinkedPageUrls());
         $this->assertContains('https://example.com/related', $result->getLinkedPageUrls());
@@ -91,6 +95,8 @@ class OpenAIPageParserDriverTest extends TestCase
                                 'markdownContent' => '# Article Without Dates',
                                 'publishedAt' => null,
                                 'updatedAt' => null,
+                                'canonicalUrl' => '',
+                                'canonicalNumber' => null,
                             ]),
                         ],
                     ],
@@ -298,7 +304,9 @@ class OpenAIPageParserDriverTest extends TestCase
                         && isset($format['schema']['properties']['thumbnailUrl'])
                         && isset($format['schema']['properties']['markdownContent'])
                         && isset($format['schema']['properties']['publishedAt'])
-                        && isset($format['schema']['properties']['updatedAt']);
+                        && isset($format['schema']['properties']['updatedAt'])
+                        && isset($format['schema']['properties']['canonicalUrl'])
+                        && isset($format['schema']['properties']['canonicalNumber']);
                 })
             )
             ->andReturn($mockResponse);
@@ -949,5 +957,132 @@ class OpenAIPageParserDriverTest extends TestCase
         $this->assertGreaterThan(0, count($linkedUrls));
         // Verify we got URLs from the original HTML
         $this->assertContains('https://example.com/page1', $linkedUrls);
+    }
+
+    public function test_it_parses_canonical_url_and_number(): void
+    {
+        $html = '<html><head><link rel="canonical" href="https://example.com/category/page-2"></head><body><h1>Category Page 2</h1></body></html>';
+
+        $mockOpenAIClient = Mockery::mock(OpenAIClient::class);
+        $mockResponse = ResponseObject::fromArray([
+            'id' => 'resp_123',
+            'status' => 'completed',
+            'output' => [
+                [
+                    'type' => 'message',
+                    'content' => [
+                        [
+                            'type' => 'output_text',
+                            'text' => json_encode([
+                                'title' => 'Category Page 2',
+                                'excerpt' => 'Test excerpt',
+                                'thumbnailUrl' => '',
+                                'markdownContent' => '# Category Page 2',
+                                'canonicalUrl' => 'https://example.com/category/page-2',
+                                'canonicalNumber' => 2,
+                            ]),
+                        ],
+                    ],
+                ],
+            ],
+        ]);
+
+        $mockOpenAIClient->shouldReceive('createResponse')
+            ->once()
+            ->andReturn($mockResponse);
+
+        $this->app->instance(OpenAIClient::class, $mockOpenAIClient);
+
+        $driver = new OpenAIPageParserDriver(['model' => 'gpt-4o-mini']);
+
+        $result = $driver->parse($html);
+
+        $this->assertInstanceOf(PageData::class, $result);
+        $this->assertEquals('https://example.com/category/page-2', $result->getCanonicalUrl());
+        $this->assertEquals(2, $result->getCanonicalNumber());
+    }
+
+    public function test_it_parses_episode_number(): void
+    {
+        $html = '<html><body><h1>Episode 5: The Final Chapter</h1></body></html>';
+
+        $mockOpenAIClient = Mockery::mock(OpenAIClient::class);
+        $mockResponse = ResponseObject::fromArray([
+            'id' => 'resp_123',
+            'status' => 'completed',
+            'output' => [
+                [
+                    'type' => 'message',
+                    'content' => [
+                        [
+                            'type' => 'output_text',
+                            'text' => json_encode([
+                                'title' => 'Episode 5: The Final Chapter',
+                                'excerpt' => 'Test excerpt',
+                                'thumbnailUrl' => '',
+                                'markdownContent' => '# Episode 5',
+                                'canonicalUrl' => 'https://example.com/episode-5',
+                                'canonicalNumber' => 5,
+                            ]),
+                        ],
+                    ],
+                ],
+            ],
+        ]);
+
+        $mockOpenAIClient->shouldReceive('createResponse')
+            ->once()
+            ->andReturn($mockResponse);
+
+        $this->app->instance(OpenAIClient::class, $mockOpenAIClient);
+
+        $driver = new OpenAIPageParserDriver(['model' => 'gpt-4o-mini']);
+
+        $result = $driver->parse($html);
+
+        $this->assertInstanceOf(PageData::class, $result);
+        $this->assertEquals(5, $result->getCanonicalNumber());
+    }
+
+    public function test_it_defaults_canonical_number_to_null_when_not_specified(): void
+    {
+        $html = '<html><body><h1>Test</h1></body></html>';
+
+        $mockOpenAIClient = Mockery::mock(OpenAIClient::class);
+        $mockResponse = ResponseObject::fromArray([
+            'id' => 'resp_123',
+            'status' => 'completed',
+            'output' => [
+                [
+                    'type' => 'message',
+                    'content' => [
+                        [
+                            'type' => 'output_text',
+                            'text' => json_encode([
+                                'title' => 'Test',
+                                'excerpt' => 'Test excerpt',
+                                'thumbnailUrl' => '',
+                                'markdownContent' => '# Test',
+                                'canonicalUrl' => '',
+                                'canonicalNumber' => null,
+                            ]),
+                        ],
+                    ],
+                ],
+            ],
+        ]);
+
+        $mockOpenAIClient->shouldReceive('createResponse')
+            ->once()
+            ->andReturn($mockResponse);
+
+        $this->app->instance(OpenAIClient::class, $mockOpenAIClient);
+
+        $driver = new OpenAIPageParserDriver(['model' => 'gpt-4o-mini']);
+
+        $result = $driver->parse($html);
+
+        $this->assertInstanceOf(PageData::class, $result);
+        $this->assertNull($result->getCanonicalNumber());
     }
 }

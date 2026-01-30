@@ -83,6 +83,8 @@ Guidelines:
 - markdownContent: Convert the main content of the page to clean markdown format, preserving structure
 - publishedAt: Extract the publication date (from article:published_time, datePublished, or similar meta tags)
 - updatedAt: Extract the last updated date (from article:modified_time, dateModified, or similar meta tags)
+- canonicalUrl: Extract the canonical URL (from <link rel="canonical"> tag or canonical meta tag)
+- canonicalNumber: Extract the page/episode/part number if applicable (e.g., page 2 of a category, episode 5 of a series, part 3 of an article). Return null if not applicable.
 
 HTML Content:
 {$html}
@@ -124,6 +126,14 @@ PROMPT;
                     'type' => ['string', 'null'],
                     'description' => 'The last updated date in ISO 8601 format (YYYY-MM-DDTHH:mm:ssZ)',
                     'format' => 'date-time',
+                ],
+                'canonicalUrl' => [
+                    'type' => 'string',
+                    'description' => 'The canonical URL of the page (from canonical link tag or meta tag)',
+                ],
+                'canonicalNumber' => [
+                    'type' => ['integer', 'null'],
+                    'description' => 'The page/episode/part number if applicable (e.g., page 2, episode 5, part 3). Null if not applicable.',
                 ],
             ],
             'required' => ['title', 'excerpt', 'thumbnailUrl', 'markdownContent'],
@@ -203,6 +213,16 @@ PROMPT;
             } catch (\Exception $e) {
                 // If parsing fails, leave as null
             }
+        }
+
+        // Set canonical URL
+        if (isset($data['canonicalUrl'])) {
+            $pageData->setCanonicalUrl($data['canonicalUrl']);
+        }
+
+        // Set canonical number
+        if (isset($data['canonicalNumber'])) {
+            $pageData->setCanonicalNumber($data['canonicalNumber'] !== null ? (int) $data['canonicalNumber'] : null);
         }
 
         return $pageData;

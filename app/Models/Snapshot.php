@@ -9,6 +9,8 @@ class Snapshot extends Model
 {
     protected $casts = [
         'scraping_status' => ScrapingStatus::class,
+        'content_change_percentage' => 'float',
+        'cost' => 'float',
     ];
 
     public function entity(): BelongsTo

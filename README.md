@@ -21,6 +21,15 @@ Laravel is a web application framework with expressive, elegant syntax. We belie
 
 Laravel is accessible, powerful, and provides tools required for large, robust applications.
 
+## Admin Panel
+
+The application includes a [Filament](https://filamentphp.com) 4 admin panel at `/admin`. After setting up the application:
+
+1. Create an admin user: `php artisan make:filament-user`
+2. Visit `/admin` in your browser and sign in.
+
+The panel provides CRUD for Verticals, Sources, Entities, Snapshots, Clients, and Users.
+
 ## Learning Laravel
 
 Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework. You can also check out [Laravel Learn](https://laravel.com/learn), where you will be guided through building a modern Laravel application.

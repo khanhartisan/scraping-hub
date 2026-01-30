@@ -10,6 +10,12 @@ class Source extends Model
 {
     use EntityCountable;
 
+    protected $fillable = [
+        'base_url',
+        'authority_score',
+        'priority',
+    ];
+
     protected $casts = [
         'authority_score' => 'integer',
     ];

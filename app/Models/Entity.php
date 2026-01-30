@@ -14,6 +14,14 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Entity extends Model
 {
+    protected $fillable = [
+        'source_id',
+        'url',
+        'description',
+        'type',
+        'scraping_status',
+    ];
+
     protected $casts = [
         'canonical_number' => 'integer',
         'attempts' => 'integer',

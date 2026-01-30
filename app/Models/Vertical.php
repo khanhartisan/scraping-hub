@@ -9,6 +9,11 @@ class Vertical extends Model
 {
     use EntityCountable;
 
+    protected $fillable = [
+        'name',
+        'description',
+    ];
+
     public function entities(): BelongsToMany
     {
         return $this->belongsToMany(Entity::class)

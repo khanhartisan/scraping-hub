@@ -124,6 +124,8 @@ class OpenAIScrapePolicyEngineDriver extends ScrapePolicyEngineService
             'Days Since Last Scrape' => $daysSinceLastScrape ?? 'N/A',
             'Source Published At' => $entity->source_published_at?->toIso8601String() ?? 'unknown',
             'Source Updated At' => $entity->source_updated_at?->toIso8601String() ?? 'unknown',
+            'Source Authority Score' => $entity->source?->authority_score ?? 0,
+            'Source Priority' => round($entity->source?->priority ?? 0.5, 2),
         ];
 
         if ($currentSnapshot) {
@@ -174,20 +176,24 @@ Guidelines for evaluation:
 - cost_factor: Based on historical cost, content length, media count, fetch duration, and structured data
 - error_penalty: Based on historical error rates (FAILED, TIMEOUT, BLOCKED statuses)
 
-Use these calculated factors to inform your decisions for the metrics below.
+**Source Authority Score** (0-100): Indicates the trustworthiness/importance of the source. Scale is 0 to 100—higher scores mean more authoritative, trusted, or high-value sources. Use this to weight value_boost, priority, and next_scrape_at_hours—authoritative sources may warrant higher priority and more frequent scraping.
+
+**Source Priority** (0.0-1.0): Indicates the business priority of this source. Scale is 0.0 to 1.0—higher values mean higher business priority. This is a direct signal about how important this source is to the business, independent of authority. Use this to weight priority and urgency—high priority sources should be scraped more frequently and with higher urgency.
+
+Use these calculated factors and the source authority score to inform your decisions for the metrics below.
 
 1. **value_boost** (0.0-1.0): How valuable is this content?
    - High (0.7-1.0): High-traffic pages, monetizable content, critical business data
    - Medium (0.4-0.7): Important but not critical content
    - Low (0.0-0.4): Low-value or archival content
-   - Consider: content type, page type, structured data presence
+   - Consider: content type, page type, structured data presence, and Source Authority Score (higher authority = typically higher value)
 
 2. **priority** (0.0-1.0): Overall priority for scraping this entity
    - High (0.7-1.0): Critical, high-value, frequently changing content
    - Medium (0.4-0.7): Standard priority content
    - Low (0.0-0.4): Low-priority, archival, or rarely accessed content
-   - Consider: combination of the calculated change_boost, value_boost, cost_factor, and error_penalty
-   - Higher priority when: high change_boost + high value_boost, despite higher cost_factor or error_penalty
+   - Consider: combination of the calculated change_boost, value_boost, cost_factor, error_penalty, Source Authority Score, and Source Priority
+   - Higher priority when: high source priority, high authority score, high change_boost + high value_boost, despite higher cost_factor or error_penalty
 
 3. **urgency** (0.0-1.0): How urgent is it to scrape this right now?
    - High (0.7-1.0): Breaking news, time-sensitive content, long time since last scrape, high change_boost

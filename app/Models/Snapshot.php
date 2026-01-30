@@ -11,6 +11,7 @@ class Snapshot extends Model
         'entity_id',
         'scraping_status',
         'version',
+        'error_logs',
     ];
 
     protected $casts = [

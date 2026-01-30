@@ -83,7 +83,7 @@ class ScrapeEntityJob implements ShouldQueue
             $fetchDurationMs = (int) round((microtime(true) - $fetchStartedAt) * 1000);
 
             if ($statusCode >= 400) {
-                $this->markEntityFailed($entity, $statusCode, null, $fetchDurationMs);
+                $this->markEntityFailed($entity, $statusCode, null, $fetchDurationMs, "HTTP {$statusCode}");
                 return;
             }
 
@@ -95,18 +95,19 @@ class ScrapeEntityJob implements ShouldQueue
         } catch (ConnectException $e) {
             Log::warning("ScrapeEntityJob: Connect error for entity [{$entity->id}]: {$e->getMessage()}");
             $fetchDurationMs = (int) round((microtime(true) - $fetchStartedAt) * 1000);
-            $this->markEntityFailed($entity, null, ScrapingStatus::TIMEOUT, $fetchDurationMs);
+            $this->markEntityFailed($entity, null, ScrapingStatus::TIMEOUT, $fetchDurationMs, $e->getMessage());
         } catch (RequestException $e) {
             $statusCode = $e->hasResponse() ? $e->getResponse()->getStatusCode() : null;
             Log::warning("ScrapeEntityJob: Request error for entity [{$entity->id}]: {$e->getMessage()}");
             $fetchDurationMs = (int) round((microtime(true) - $fetchStartedAt) * 1000);
-            $this->markEntityFailed($entity, $statusCode, null, $fetchDurationMs);
+            $this->markEntityFailed($entity, $statusCode, null, $fetchDurationMs, $e->getMessage());
         } catch (\Throwable $e) {
             Log::error("ScrapeEntityJob: Unexpected error for entity [{$entity->id}]: {$e->getMessage()}", [
                 'exception' => $e,
             ]);
             $fetchDurationMs = (int) round((microtime(true) - $fetchStartedAt) * 1000);
-            $this->markEntityFailed($entity, null, ScrapingStatus::FAILED, $fetchDurationMs);
+            $errorLogs = $e->getMessage() . "\n" . $e->getTraceAsString();
+            $this->markEntityFailed($entity, null, ScrapingStatus::FAILED, $fetchDurationMs, $errorLogs);
         }
     }
 
@@ -286,7 +287,7 @@ class ScrapeEntityJob implements ShouldQueue
      * Mark entity as failed, create a snapshot with the appropriate status for history/evaluation,
      * apply backoff or stop if max attempts reached.
      */
-    protected function markEntityFailed(Entity $entity, ?int $statusCode, ?ScrapingStatus $status = null, ?int $fetchDurationMs = null): void
+    protected function markEntityFailed(Entity $entity, ?int $statusCode, ?ScrapingStatus $status = null, ?int $fetchDurationMs = null, ?string $errorLogs = null): void
     {
         $status = $status ?? ($this->isBlockedStatus($statusCode) ? ScrapingStatus::BLOCKED : ScrapingStatus::FAILED);
         $maxAttempts = config('queue.max_scrape_attempts');
@@ -294,7 +295,7 @@ class ScrapeEntityJob implements ShouldQueue
         $entity->increment('attempts');
         $entity->refresh();
 
-        DB::transaction(function () use ($entity, $status, $fetchDurationMs, $maxAttempts) {
+        DB::transaction(function () use ($entity, $status, $fetchDurationMs, $errorLogs, $maxAttempts) {
             $version = $entity->snapshots_count + 1;
             // Always create a snapshot with the failure status so it can be used as history for evaluating entities.
             $snapshot = new Snapshot([
@@ -302,6 +303,7 @@ class ScrapeEntityJob implements ShouldQueue
                 'scraping_status' => $status,
                 'version' => $version,
                 'fetch_duration_ms' => $fetchDurationMs,
+                'error_logs' => $errorLogs,
             ]);
             $snapshot->save();
 

@@ -35,6 +35,9 @@ return new class extends Migration
             $table->unsignedInteger('fetch_duration_ms')->nullable();
             $table->decimal('cost', 3, 2)->nullable();
 
+            // Exception/error details for debugging
+            $table->text('error_logs')->nullable();
+
             $table->timestamps();
 
             $table->index(['entity_id', 'created_at']);

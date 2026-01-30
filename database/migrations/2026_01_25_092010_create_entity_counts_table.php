@@ -16,10 +16,11 @@ return new class extends Migration
             $table->string('countable_type');
             $table->ulid('countable_id');
             $table->unsignedTinyInteger('entity_type');
+            $table->unsignedTinyInteger('scraping_status')->default(\App\Enums\ScrapingStatus::PENDING->value);
             $table->unsignedBigInteger('count')->default(0);
             $table->timestamps();
 
-            $table->unique(['countable_type', 'countable_id', 'entity_type'], 'countable_unique');
+            $table->unique(['countable_type', 'countable_id', 'entity_type', 'scraping_status'], 'countable_entity_scraping_unique');
         });
     }
 

@@ -1,0 +1,109 @@
+<?php
+
+namespace App\ModelListeners\Entity;
+
+use App\Enums\EntityType;
+use App\Enums\ScrapingStatus;
+use App\Models\Entity;
+use KhanhArtisan\LaravelBackbone\ModelListener\ModelListener;
+use KhanhArtisan\LaravelBackbone\ModelListener\ModelListenerInterface;
+
+class EntityCountListener extends ModelListener implements ModelListenerInterface
+{
+    /**
+     * Listeners with higher priority will run first.
+     *
+     * @return int
+     */
+    public function priority(): int
+    {
+        return 0;
+    }
+
+    /**
+     * Listen to the events of the given model.
+     *
+     * @return string
+     */
+    public function modelClass(): string
+    {
+        return Entity::class;
+    }
+
+    /**
+     * The list of all the events to listen to.
+     *
+     * @return array<string>
+     */
+    public function events(): array
+    {
+        return ['created', 'deleting', 'updating'];
+    }
+
+    /**
+     * Handle the event.
+     *
+     * @param Entity $entity
+     * @param string $event
+     * @return void
+     */
+    protected function _handle(Entity $entity, string $event): void
+    {
+        if ($event === 'created') {
+            $this->incrementCounts($entity, 1);
+            return;
+        }
+
+        if ($event === 'deleting') {
+            $this->incrementCounts($entity, -1);
+            return;
+        }
+
+        if ($event === 'updating') {
+            $entityTypeChanged = $entity->isDirty('type');
+            $scrapingStatusChanged = $entity->isDirty('scraping_status');
+
+            if (!$entityTypeChanged && !$scrapingStatusChanged) {
+                return;
+            }
+
+            $oldType = $entity->getOriginal('type');
+            $oldScrapingStatus = $entity->getOriginal('scraping_status');
+
+            $oldType = $oldType instanceof EntityType
+                ? $oldType
+                : (is_int($oldType) ? EntityType::from($oldType) : EntityType::UNCLASSIFIED);
+            $oldScrapingStatus = $oldScrapingStatus instanceof ScrapingStatus
+                ? $oldScrapingStatus
+                : (is_int($oldScrapingStatus) ? ScrapingStatus::from($oldScrapingStatus) : ScrapingStatus::PENDING);
+
+            $this->adjustCounts($entity, $oldType, $oldScrapingStatus, -1);
+            $this->incrementCounts($entity, 1);
+        }
+    }
+
+    private function incrementCounts(Entity $entity, int $delta): void
+    {
+        if ($entity->type === null || $entity->scraping_status === null) {
+            return;
+        }
+        $this->adjustCounts($entity, $entity->type, $entity->scraping_status, $delta);
+    }
+
+    private function adjustCounts(
+        Entity $entity,
+        EntityType $entityType,
+        ScrapingStatus $scrapingStatus,
+        int $delta
+    ): void {
+        $source = $entity->source;
+        if ($source) {
+            $source->adjustEntityCount($entityType, $scrapingStatus, $delta);
+        }
+
+        $entity->loadMissing('verticals');
+        foreach ($entity->verticals as $vertical) {
+            $vertical->adjustEntityCount($entityType, $scrapingStatus, $delta);
+        }
+    }
+}

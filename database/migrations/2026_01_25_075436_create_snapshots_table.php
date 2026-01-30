@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('snapshots', function (Blueprint $table) {
             $table->ulid('id')->primary();
-            $table->ulid('entity_id')->index();
+            $table->ulid('entity_id');
             $table->unsignedTinyInteger('scraping_status')
                 ->default(\App\Enums\ScrapingStatus::PENDING->value);
 
@@ -36,6 +36,8 @@ return new class extends Migration
             $table->decimal('cost', 3, 2)->nullable();
 
             $table->timestamps();
+
+            $table->index(['entity_id', 'created_at']);
         });
     }
 

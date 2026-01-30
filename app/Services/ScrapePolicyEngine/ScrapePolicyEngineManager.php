@@ -23,4 +23,14 @@ class ScrapePolicyEngineManager extends Manager
 
         return new Drivers\DummyScrapePolicyEngineDriver($config);
     }
+
+    /**
+     * Create an OpenAI driver instance.
+     */
+    protected function createOpenaiDriver(): Drivers\OpenAIScrapePolicyEngineDriver
+    {
+        $config = $this->config->get('scrapepolicyengine.drivers.openai', []);
+
+        return new Drivers\OpenAIScrapePolicyEngineDriver($config);
+    }
 }

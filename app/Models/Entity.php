@@ -25,6 +25,7 @@ class Entity extends Model
         'source_updated_at' => 'datetime',
         'fetched_at' => 'datetime',
         'next_scrape_at' => 'datetime',
+        'policy_result' => 'array',
     ];
 
     public function canonicalEntity(): BelongsTo

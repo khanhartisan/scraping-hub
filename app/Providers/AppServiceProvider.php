@@ -8,6 +8,7 @@ use App\Contracts\PageClassifier\Classifier;
 use App\Contracts\PageParser\Parser;
 use App\Contracts\ScrapePolicyEngine\ScrapePolicyEngine;
 use App\Contracts\Scraper\Scraper;
+use App\Models\Model;
 use App\Services\FileVision\FileVisionManager;
 use App\Services\OpenAI\OpenAIManager;
 use App\Services\PageClassifier\PageClassifierManager;
@@ -36,6 +37,6 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
+        Model::unguard();
     }
 }

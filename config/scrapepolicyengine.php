@@ -24,7 +24,7 @@ return [
     | driver used by your application. An example configuration is provided
     | for each driver supported. You're also free to add more drivers.
     |
-    | Supported drivers: "dummy"
+    | Supported drivers: "dummy", "openai"
     |
     */
 
@@ -32,6 +32,10 @@ return [
 
         'dummy' => [
             'default_interval_hours' => env('SCRAPE_POLICY_ENGINE_DUMMY_INTERVAL_HOURS', 24),
+        ],
+
+        'openai' => [
+            'model' => env('SCRAPE_POLICY_ENGINE_OPENAI_MODEL', 'gpt-4o-mini'),
         ],
 
     ],

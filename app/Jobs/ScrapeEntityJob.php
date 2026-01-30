@@ -1,0 +1,345 @@
+<?php
+
+namespace App\Jobs;
+
+use App\Enums\EntityType;
+use App\Enums\Queue as QueueEnum;
+use App\Enums\ScrapingStatus;
+use App\Facades\PageClassifier;
+use App\Facades\PageParser;
+use App\Facades\ScrapePolicyEngine;
+use App\Facades\Scraper;
+use App\Models\Entity;
+use App\Models\Snapshot;
+use App\Models\Source;
+use App\Utils\HtmlCleaner;
+use Carbon\Carbon;
+use GuzzleHttp\Exception\ConnectException;
+use GuzzleHttp\Exception\RequestException;
+use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Foundation\Bus\Dispatchable;
+use Illuminate\Queue\InteractsWithQueue;
+use Illuminate\Queue\SerializesModels;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Psr\Http\Message\ResponseInterface;
+
+class ScrapeEntityJob implements ShouldQueue
+{
+    use Dispatchable;
+    use InteractsWithQueue;
+    use Queueable;
+    use SerializesModels;
+
+    /**
+     * Delete the job if the entity no longer exists.
+     */
+    public bool $deleteWhenMissingModels = true;
+
+    /**
+     * Maximum number of times to attempt the job.
+     */
+    public int $tries = 2;
+
+    /**
+     * Number of seconds to wait before retrying after a failure.
+     */
+    public int $backoff = 300;
+
+    /**
+     * The entity to scrape.
+     */
+    public Entity $entity;
+
+    /**
+     * Create a new job instance.
+     */
+    public function __construct(Entity $entity)
+    {
+        $this->entity = $entity->withoutRelations();
+        $this->onQueue(QueueEnum::SCRAPING->value);
+    }
+
+    /**
+     * Execute the job.
+     */
+    public function handle(): void
+    {
+        $entity = $this->entity;
+
+        if ($entity->scraping_status !== ScrapingStatus::QUEUED) {
+            Log::debug("ScrapeEntityJob: Entity [{$entity->id}] status is {$entity->scraping_status->name}, skipping");
+            return;
+        }
+
+        $entity->update(['scraping_status' => ScrapingStatus::FETCHING]);
+
+        $fetchStartedAt = microtime(true);
+
+        try {
+            $response = $this->fetchUrl($entity->url);
+            $statusCode = $response->getStatusCode();
+            $fetchDurationMs = (int) round((microtime(true) - $fetchStartedAt) * 1000);
+
+            if ($statusCode >= 400) {
+                $this->markEntityFailed($entity, $statusCode, null, $fetchDurationMs);
+                return;
+            }
+
+            $html = (string) $response->getBody();
+
+            $linkedUrls = $this->processFetchedContent($entity, $html, $fetchDurationMs);
+
+            $this->createLinkedEntitiesAndQueueScrapes($entity, $linkedUrls);
+        } catch (ConnectException $e) {
+            Log::warning("ScrapeEntityJob: Connect error for entity [{$entity->id}]: {$e->getMessage()}");
+            $fetchDurationMs = (int) round((microtime(true) - $fetchStartedAt) * 1000);
+            $this->markEntityFailed($entity, null, ScrapingStatus::TIMEOUT, $fetchDurationMs);
+        } catch (RequestException $e) {
+            $statusCode = $e->hasResponse() ? $e->getResponse()->getStatusCode() : null;
+            Log::warning("ScrapeEntityJob: Request error for entity [{$entity->id}]: {$e->getMessage()}");
+            $fetchDurationMs = (int) round((microtime(true) - $fetchStartedAt) * 1000);
+            $this->markEntityFailed($entity, $statusCode, null, $fetchDurationMs);
+        } catch (\Throwable $e) {
+            Log::error("ScrapeEntityJob: Unexpected error for entity [{$entity->id}]: {$e->getMessage()}", [
+                'exception' => $e,
+            ]);
+            $fetchDurationMs = (int) round((microtime(true) - $fetchStartedAt) * 1000);
+            $this->markEntityFailed($entity, null, ScrapingStatus::FAILED, $fetchDurationMs);
+        }
+    }
+
+    /**
+     * Fetch URL and return response. Override in tests if needed.
+     */
+    protected function fetchUrl(string $url): ResponseInterface
+    {
+        return Scraper::fetch($url);
+    }
+
+    /**
+     * Process fetched HTML: classify, parse, create snapshot, run policy, update entity.
+     *
+     * @return array<int, string> Linked page URLs from the parser (for discovery).
+     */
+    protected function processFetchedContent(Entity $entity, string $html, int $fetchDurationMs): array
+    {
+        $cleanedHtml = HtmlCleaner::clean($html);
+
+        // Long-running AI/service calls outside any transaction.
+        $classification = PageClassifier::classify($cleanedHtml);
+        $pageData = PageParser::parse($cleanedHtml);
+
+        $linkedUrls = $pageData->getLinkedPageUrls();
+
+        $contentLength = strlen($pageData->getMarkdownContent());
+        $linkCount = count($linkedUrls);
+        if ($linkCount === 0 && $pageData->getMarkdownContent() !== '') {
+            $linkCount = $this->countLinksInMarkdown($pageData->getMarkdownContent());
+        }
+        $mediaCount = $this->countMediaInMarkdown($pageData->getMarkdownContent());
+
+        DB::transaction(function () use ($entity, $classification, $pageData, $contentLength, $linkCount, $mediaCount, $fetchDurationMs) {
+            $version = $entity->snapshots_count + 1;
+            // Snapshot with SUCCESS status for history/evaluation (failure paths create snapshots in markEntityFailed).
+            $snapshot = new Snapshot([
+                'entity_id' => $entity->id,
+                'scraping_status' => ScrapingStatus::SUCCESS,
+                'version' => $version,
+                'content_length' => $contentLength,
+                'link_count' => $linkCount,
+                'media_count' => $mediaCount,
+                'structured_data_count' => 0,
+                'fetch_duration_ms' => $fetchDurationMs,
+            ]);
+            $snapshot->save();
+
+            $entity->type = EntityType::PAGE;
+            $entity->page_type = $classification->getPageType();
+            $entity->content_type = $classification->getContentType();
+            $entity->temporal = $classification->getTemporal();
+            $entity->description = $classification->getDescription() ?? $pageData->getExcerpt();
+            if (strlen((string) $entity->description) > 1024) {
+                $entity->description = substr((string) $entity->description, 0, 1021) . '...';
+            }
+            $entity->source_published_at = $pageData->getPublishedAt();
+            $entity->source_updated_at = $pageData->getUpdatedAt();
+            $entity->canonical_number = $pageData->getCanonicalNumber() ?? 0;
+            $entity->fetched_at = Carbon::now();
+            $entity->snapshots_count = $version;
+            $entity->save();
+        });
+
+        // Long-running policy evaluation outside transaction.
+        $entity->refresh();
+        $policyResult = ScrapePolicyEngine::evaluate($entity);
+
+        DB::transaction(function () use ($entity, $policyResult) {
+            $entity->next_scrape_at = $policyResult->getNextScrapeAt();
+            $entity->policy_result = $policyResult->toArray();
+            $entity->scraping_status = ScrapingStatus::SUCCESS;
+            $entity->attempts = 0;
+            $entity->save();
+        });
+
+        return $linkedUrls;
+    }
+
+    /**
+     * Create entities for linked URLs on the same host (inline so they are not lost if a job never runs).
+     * Scrape jobs for new entities are dispatched by the scheduler job when they become due.
+     *
+     * @param  array<int, string>  $linkedUrls
+     */
+    protected function createLinkedEntitiesAndQueueScrapes(Entity $entity, array $linkedUrls): void
+    {
+        if (empty($linkedUrls)) {
+            return;
+        }
+
+        $entityHost = parse_url($entity->url, PHP_URL_HOST);
+        if ($entityHost === null || $entityHost === '') {
+            return;
+        }
+
+        $sameHostUrls = array_values(array_filter($linkedUrls, function (string $url) use ($entityHost): bool {
+            $host = parse_url($url, PHP_URL_HOST);
+
+            return $host !== null && $host !== '' && strtolower($host) === strtolower($entityHost);
+        }));
+
+        if (empty($sameHostUrls)) {
+            return;
+        }
+
+        $source = $entity->source ?? Source::find($entity->source_id);
+        if (! $source instanceof Source) {
+            return;
+        }
+
+        $normalized = [];
+        foreach ($sameHostUrls as $url) {
+            $url = $this->normalizeLinkedUrl($url);
+            if ($url !== '') {
+                $normalized[$url] = true;
+            }
+        }
+        $normalizedUrls = array_keys($normalized);
+        if (empty($normalizedUrls)) {
+            return;
+        }
+
+        $hashes = array_map('sha1', $normalizedUrls);
+        $existingHashes = Entity::query()
+            ->where('source_id', $source->id)
+            ->whereIn('url_hash', $hashes)
+            ->pluck('url_hash')
+            ->flip()
+            ->all();
+
+        $newUrls = [];
+        foreach ($normalizedUrls as $url) {
+            if (! isset($existingHashes[sha1($url)])) {
+                $newUrls[] = $url;
+            }
+        }
+
+        if (empty($newUrls)) {
+            return;
+        }
+
+        DB::transaction(function () use ($source, $newUrls): void {
+            foreach ($newUrls as $url) {
+                Entity::create([
+                    'source_id' => $source->id,
+                    'url' => $url,
+                ]);
+            }
+        });
+    }
+
+    protected function normalizeLinkedUrl(string $url): string
+    {
+        $url = trim($url);
+        if ($url === '' || ! str_starts_with($url, 'http://') && ! str_starts_with($url, 'https://')) {
+            return '';
+        }
+
+        return $url;
+    }
+
+    protected function countLinksInMarkdown(string $markdown): int
+    {
+        return (int) preg_match_all('/\]\s*\([^)]+\)/', $markdown);
+    }
+
+    protected function countMediaInMarkdown(string $markdown): int
+    {
+        $img = (int) preg_match_all('/!\[[^\]]*\]\s*\([^)]+\)/', $markdown);
+        $embeds = (int) preg_match_all('/<img\s/i', $markdown);
+
+        return $img + $embeds;
+    }
+
+    /**
+     * Mark entity as failed, create a snapshot with the appropriate status for history/evaluation,
+     * apply backoff or stop if max attempts reached.
+     */
+    protected function markEntityFailed(Entity $entity, ?int $statusCode, ?ScrapingStatus $status = null, ?int $fetchDurationMs = null): void
+    {
+        $status = $status ?? ($this->isBlockedStatus($statusCode) ? ScrapingStatus::BLOCKED : ScrapingStatus::FAILED);
+        $maxAttempts = config('queue.max_scrape_attempts');
+
+        $entity->increment('attempts');
+        $entity->refresh();
+
+        DB::transaction(function () use ($entity, $status, $fetchDurationMs, $maxAttempts) {
+            $version = $entity->snapshots_count + 1;
+            // Always create a snapshot with the failure status so it can be used as history for evaluating entities.
+            $snapshot = new Snapshot([
+                'entity_id' => $entity->id,
+                'scraping_status' => $status,
+                'version' => $version,
+                'fetch_duration_ms' => $fetchDurationMs,
+            ]);
+            $snapshot->save();
+
+            if ($entity->attempts >= $maxAttempts) {
+                $entity->update([
+                    'scraping_status' => $status,
+                    'next_scrape_at' => null,
+                    'snapshots_count' => $version,
+                ]);
+            } else {
+                $delaySeconds = $this->backoffSecondsForAttempt($entity->attempts);
+                $entity->update([
+                    'scraping_status' => $status,
+                    'next_scrape_at' => Carbon::now()->addSeconds($delaySeconds),
+                    'snapshots_count' => $version,
+                ]);
+            }
+        });
+
+        if ($entity->attempts >= $maxAttempts) {
+            Log::warning("ScrapeEntityJob: Entity [{$entity->id}] exceeded max attempts ({$entity->attempts}/{$maxAttempts}), stopping.");
+        }
+    }
+
+    /**
+     * Exponential backoff in seconds: base * 2^(attempt-1), capped at 7 days.
+     */
+    protected function backoffSecondsForAttempt(int $attempt): int
+    {
+        $baseSeconds = 3600;   // 1 hour
+        $maxSeconds = 86400 * 7; // 7 days
+        $delay = $baseSeconds * (2 ** ($attempt - 1));
+
+        return (int) min($delay, $maxSeconds);
+    }
+
+    protected function isBlockedStatus(?int $statusCode): bool
+    {
+        return $statusCode === 403 || $statusCode === 429;
+    }
+}

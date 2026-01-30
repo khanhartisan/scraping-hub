@@ -16,6 +16,7 @@ class Entity extends Model
 {
     protected $casts = [
         'canonical_number' => 'integer',
+        'attempts' => 'integer',
         'type' => EntityType::class,
         'scraping_status' => ScrapingStatus::class,
         'page_type' => PageType::class,

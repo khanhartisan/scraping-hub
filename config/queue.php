@@ -17,6 +17,45 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Scraping Queue Size Limit
+    |--------------------------------------------------------------------------
+    |
+    | Maximum number of jobs allowed on the scraping queue. When reached,
+    | no new scrape jobs are dispatched until the queue drains. Set via
+    | QUEUE_SCRAPING_MAX_SIZE (default: 1000).
+    |
+    */
+
+    'max_scraping_queue_size' => (int) env('QUEUE_SCRAPING_MAX_SIZE', 1000),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Max Scrape Attempts
+    |--------------------------------------------------------------------------
+    |
+    | After this many failed scrape attempts, the entity is no longer queued.
+    | Set via SCRAPE_MAX_ATTEMPTS (default: 5).
+    |
+    */
+
+    'max_scrape_attempts' => (int) env('SCRAPE_MAX_ATTEMPTS', 5),
+
+    /*
+    |--------------------------------------------------------------------------
+    | ScrapeSourcesJob: Chunk Size & Timeout
+    |--------------------------------------------------------------------------
+    |
+    | Chunk size for iterating sources (millions-scale). Timeout in seconds;
+    | job stops processing further chunks after this many seconds.
+    | SCRAPE_SOURCES_CHUNK_SIZE (default: 500), SCRAPE_SOURCES_MAX_SECONDS (default: 300).
+    |
+    */
+
+    'scrape_sources_chunk_size' => (int) env('SCRAPE_SOURCES_CHUNK_SIZE', 500),
+    'scrape_sources_max_seconds' => (int) env('SCRAPE_SOURCES_MAX_SECONDS', 300),
+
+    /*
+    |--------------------------------------------------------------------------
     | Queue Connections
     |--------------------------------------------------------------------------
     |

@@ -38,6 +38,7 @@ return new class extends Migration
             $table->dateTime('source_updated_at')->nullable();
             $table->dateTime('fetched_at')->nullable();
             $table->dateTime('next_scrape_at')->nullable();
+            $table->unsignedSmallInteger('attempts')->default(0);
 
             // Indexes
             $table->index(['scraping_status', 'updated_at']);

@@ -12,7 +12,6 @@ class Source extends Model
 
     protected $casts = [
         'authority_score' => 'integer',
-        'priority' => 'float',
     ];
 
     public function entities(): HasMany

@@ -5,6 +5,7 @@ namespace App\Services\FileVision\Drivers;
 use App\Contracts\OpenAI\OpenAIClient;
 use App\Contracts\OpenAI\ResponseInput;
 use App\Contracts\OpenAI\ResponseOptions;
+use App\Facades\OpenAI;
 use App\Services\FileVision\FileVisionService;
 use App\Utils\FileSizeFormatter;
 use Illuminate\Support\Facades\Storage;
@@ -23,7 +24,7 @@ class OpenAIFileVisionDriver extends FileVisionService
         $this->defaultModel = $config['model'] ?? 'gpt-4o-mini';
         
         // Resolve OpenAI client from container
-        $this->openAIClient = app(OpenAIClient::class);
+        $this->openAIClient = OpenAI::driver();
     }
 
     /**

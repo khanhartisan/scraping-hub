@@ -6,6 +6,7 @@ use App\Contracts\OpenAI\OpenAIClient;
 use App\Contracts\OpenAI\ResponseInput;
 use App\Contracts\OpenAI\ResponseOptions;
 use App\Contracts\ScrapePolicyEngine\PolicyResult;
+use App\Facades\OpenAI;
 use App\Models\Entity;
 use App\Services\ScrapePolicyEngine\ScrapePolicyEngineService;
 use Carbon\Carbon;
@@ -24,7 +25,7 @@ class OpenAIScrapePolicyEngineDriver extends ScrapePolicyEngineService
         $this->defaultModel = $config['model'] ?? 'gpt-4o-mini';
 
         // Resolve OpenAI client from container
-        $this->openAIClient = app(OpenAIClient::class);
+        $this->openAIClient = OpenAI::driver();
     }
 
     /**

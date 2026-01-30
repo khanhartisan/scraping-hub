@@ -6,6 +6,7 @@ use App\Contracts\OpenAI\OpenAIClient;
 use App\Contracts\OpenAI\ResponseInput;
 use App\Contracts\OpenAI\ResponseOptions;
 use App\Contracts\PageParser\PageData;
+use App\Facades\OpenAI;
 use App\Services\PageParser\PageParserService;
 use Carbon\Carbon;
 use RuntimeException;
@@ -23,7 +24,7 @@ class OpenAIPageParserDriver extends PageParserService
         $this->defaultModel = $config['model'] ?? 'gpt-4o-mini';
 
         // Resolve OpenAI client from container
-        $this->openAIClient = app(OpenAIClient::class);
+        $this->openAIClient = OpenAI::driver();
     }
 
     /**

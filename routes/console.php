@@ -29,4 +29,4 @@ Schedule::job(new ScheduleScrapeDueJob(limit: 50))->everyMinute();
 | For each source: if it has any planned (due) scrape entity, skip. Otherwise
 | ensure an entity exists for its base_url and dispatch ScrapeEntityJob (home page).
 */
-Schedule::job(new ScrapeSourcesJob)->everyFiveMinutes();
+Schedule::job(new ScrapeSourcesJob)->everyMinute();

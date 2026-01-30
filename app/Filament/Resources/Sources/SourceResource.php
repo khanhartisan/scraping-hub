@@ -22,6 +22,10 @@ class SourceResource extends Resource
 
     protected static ?string $recordTitleAttribute = 'base_url';
 
+    protected static string|\UnitEnum|null $navigationGroup = 'Content';
+
+    protected static ?int $navigationSort = 2;
+
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedLink;
 
     public static function form(Schema $schema): Schema

@@ -22,6 +22,10 @@ class SnapshotResource extends Resource
 {
     protected static ?string $model = Snapshot::class;
 
+    protected static string|\UnitEnum|null $navigationGroup = 'Content';
+
+    protected static ?int $navigationSort = 4;
+
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedPhoto;
 
     public static function form(Schema $schema): Schema

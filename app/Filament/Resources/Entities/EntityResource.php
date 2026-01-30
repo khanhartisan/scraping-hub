@@ -27,6 +27,10 @@ class EntityResource extends Resource
 
     protected static ?string $recordTitleAttribute = 'url';
 
+    protected static string|\UnitEnum|null $navigationGroup = 'Content';
+
+    protected static ?int $navigationSort = 3;
+
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedDocumentText;
 
     public static function form(Schema $schema): Schema

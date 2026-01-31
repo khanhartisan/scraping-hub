@@ -132,11 +132,11 @@ PROMPT;
                 ],
                 'tags' => [
                     'type' => 'array',
-                    'description' => 'Relevant tags describing the content (3-10 tags, lowercase, use underscores)',
+                    'description' => 'Relevant tags describing the content (lowercase)',
                     'items' => [
                         'type' => 'string',
                     ],
-                    'minItems' => 3,
+                    'minItems' => 0,
                     'maxItems' => 10,
                 ],
             ],

@@ -96,14 +96,8 @@ class EntityCountListener extends ModelListener implements ModelListenerInterfac
         ScrapingStatus $scrapingStatus,
         int $delta
     ): void {
-        $source = $entity->source;
-        if ($source) {
-            $source->adjustEntityCount($entityType, $scrapingStatus, $delta);
-        }
-
-        $entity->loadMissing('verticals');
-        foreach ($entity->verticals as $vertical) {
-            $vertical->adjustEntityCount($entityType, $scrapingStatus, $delta);
+        foreach ($entity->getEntityCountableResources() as $resource) {
+            $resource->adjustEntityCount($entityType, $scrapingStatus, $delta);
         }
     }
 }

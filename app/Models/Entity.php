@@ -93,4 +93,12 @@ class Entity extends Model
             ->using(EntityTag::class)
             ->as('entity_tag');
     }
+
+    public function getEntityCountableResources(): array
+    {
+        return [
+            $this->source,
+            ...$this->verticals,
+        ];
+    }
 }

@@ -103,12 +103,22 @@ class ScrapeEntityJob implements ShouldQueue
 
             $fetchDurationMs = (int) round((microtime(true) - $fetchStartedAt) * 1000);
 
+            $responseBodySnippet = '';
+            $response = $e->getResponse();
+            if ($response !== null && $this->isResponseBodyReadable($response)) {
+                $body = $response->getBody();
+                if ($body->isReadable()) {
+                    $body->rewind();
+                    $responseBodySnippet = $body->read(10_000);
+                }
+            }
+
             $this->markEntityFailed(
                 $entity,
                 $statusCode,
                 null,
                 $fetchDurationMs,
-                $e->getMessage()."\n".((string) $e->getResponse()?->getBody())
+                $e->getMessage()."\n".$responseBodySnippet
             );
         } catch (\Throwable $e) {
             Log::error("ScrapeEntityJob: Unexpected error for entity [{$entity->id}]: {$e->getMessage()}", [
@@ -352,5 +362,29 @@ class ScrapeEntityJob implements ShouldQueue
     protected function isBlockedStatus(?int $statusCode): bool
     {
         return $statusCode === 403 || $statusCode === 429;
+    }
+
+    /**
+     * Whether the response body is human-readable (text-like) and safe to include in error logs.
+     */
+    private function isResponseBodyReadable(ResponseInterface $response): bool
+    {
+        $contentTypes = $response->getHeader('Content-Type');
+        $contentType = (string) ($contentTypes[0] ?? '');
+        $contentType = strtolower(trim(explode(';', $contentType)[0]));
+
+        if ($contentType === '') {
+            return false;
+        }
+
+        $readableApplicationTypes = [
+            'application/json',
+            'application/xml',
+            'application/javascript',
+            'application/xhtml+xml',
+        ];
+
+        return str_starts_with($contentType, 'text/')
+            || in_array($contentType, $readableApplicationTypes, true);
     }
 }

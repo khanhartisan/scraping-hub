@@ -1,15 +1,14 @@
 <?php
 
-namespace App\Filament\Resources\Verticals;
+namespace App\Filament\Resources\Tags;
 
-use App\Filament\Resources\Verticals\Pages\ManageVerticals;
-use App\Models\Vertical;
+use App\Filament\Resources\Tags\Pages\ManageTags;
+use App\Models\Tag;
 use BackedEnum;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
-use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
@@ -17,17 +16,17 @@ use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 
-class VerticalResource extends Resource
+class TagResource extends Resource
 {
-    protected static ?string $model = Vertical::class;
+    protected static ?string $model = Tag::class;
 
     protected static ?string $recordTitleAttribute = 'name';
 
     protected static string|\UnitEnum|null $navigationGroup = 'Content';
 
-    protected static ?int $navigationSort = 0;
+    protected static ?int $navigationSort = 1;
 
-    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
+    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedTag;
 
     public static function form(Schema $schema): Schema
     {
@@ -37,9 +36,6 @@ class VerticalResource extends Resource
                     ->required()
                     ->maxLength(255)
                     ->unique(ignoreRecord: true),
-                Textarea::make('description')
-                    ->maxLength(65535)
-                    ->columnSpanFull(),
             ]);
     }
 
@@ -48,7 +44,10 @@ class VerticalResource extends Resource
         return $table
             ->columns([
                 TextColumn::make('name')->searchable()->sortable(),
-                TextColumn::make('description')->limit(50),
+                TextColumn::make('entities_count')
+                    ->counts('entities')
+                    ->label('Entities')
+                    ->sortable(),
             ])
             ->filters([
                 //
@@ -67,7 +66,7 @@ class VerticalResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index' => ManageVerticals::route('/'),
+            'index' => ManageTags::route('/'),
         ];
     }
 }

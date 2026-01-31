@@ -225,7 +225,7 @@ PROMPT;
     {
         return [
             'type' => 'object',
-            'properties' => [
+            'properties' => $properties = [
                 'value_boost' => [
                     'type' => 'number',
                     'description' => 'How valuable is this content (0.0-1.0)',
@@ -251,12 +251,7 @@ PROMPT;
                     'maximum' => 8760,
                 ],
             ],
-            'required' => [
-                'value_boost',
-                'priority',
-                'urgency',
-                'next_scrape_at_hours',
-            ],
+            'required' => array_keys($properties),
             'additionalProperties' => false,
         ];
     }

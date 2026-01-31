@@ -9,6 +9,7 @@ use App\Contracts\PageParser\PageData;
 use App\Facades\OpenAI;
 use App\Services\PageParser\PageParserService;
 use Carbon\Carbon;
+use GuzzleHttp\Exception\RequestException;
 use RuntimeException;
 
 class OpenAIPageParserDriver extends PageParserService
@@ -47,6 +48,8 @@ class OpenAIPageParserDriver extends PageParserService
 
         try {
             $response = $this->openAIClient->createResponse($input, $options);
+        } catch (RequestException $e) {
+            throw $e;
         } catch (\Exception $e) {
             throw new RuntimeException(
                 "Failed to parse page with OpenAI: {$e->getMessage()}",
@@ -101,7 +104,7 @@ PROMPT;
     {
         return [
             'type' => 'object',
-            'properties' => [
+            'properties' => $properties = [
                 'title' => [
                     'type' => 'string',
                     'description' => 'The main title of the page',
@@ -137,7 +140,7 @@ PROMPT;
                     'description' => 'The page/episode/part number if applicable (e.g., page 2, episode 5, part 3). Null if not applicable.',
                 ],
             ],
-            'required' => ['title', 'excerpt', 'thumbnailUrl', 'markdownContent'],
+            'required' => array_keys($properties),
             'additionalProperties' => false,
         ];
     }

@@ -98,9 +98,18 @@ class ScrapeEntityJob implements ShouldQueue
             $this->markEntityFailed($entity, null, ScrapingStatus::TIMEOUT, $fetchDurationMs, $e->getMessage());
         } catch (RequestException $e) {
             $statusCode = $e->hasResponse() ? $e->getResponse()->getStatusCode() : null;
+
             Log::warning("ScrapeEntityJob: Request error for entity [{$entity->id}]: {$e->getMessage()}");
+
             $fetchDurationMs = (int) round((microtime(true) - $fetchStartedAt) * 1000);
-            $this->markEntityFailed($entity, $statusCode, null, $fetchDurationMs, $e->getMessage());
+
+            $this->markEntityFailed(
+                $entity,
+                $statusCode,
+                null,
+                $fetchDurationMs,
+                $e->getMessage()."\n".((string) $e->getResponse()?->getBody())
+            );
         } catch (\Throwable $e) {
             Log::error("ScrapeEntityJob: Unexpected error for entity [{$entity->id}]: {$e->getMessage()}", [
                 'exception' => $e,

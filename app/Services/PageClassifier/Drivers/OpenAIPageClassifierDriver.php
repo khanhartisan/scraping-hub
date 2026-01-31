@@ -114,7 +114,7 @@ PROMPT;
 
         return [
             'type' => 'object',
-            'properties' => [
+            'properties' => $properties = [
                 'content_type' => [
                     'type' => 'string',
                     'description' => 'The primary type of content on the page',
@@ -140,7 +140,7 @@ PROMPT;
                     'maxItems' => 10,
                 ],
             ],
-            'required' => ['content_type', 'page_type', 'temporal', 'tags'],
+            'required' => array_keys($properties),
             'additionalProperties' => false,
         ];
     }

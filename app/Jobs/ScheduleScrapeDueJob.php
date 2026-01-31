@@ -8,6 +8,7 @@ use App\Models\Entity;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldBeUniqueUntilProcessing;
 use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
@@ -77,6 +78,28 @@ class ScheduleScrapeDueJob implements ShouldQueue, ShouldBeUniqueUntilProcessing
 
     private function runScheduler(): void
     {
+        $maxAttempts = config('queue.max_scrape_attempts');
+
+        // Dispatch jobs
+        foreach (ScrapingStatus::cases() as $scrapingStatus) {
+            $query = Entity::query()
+                ->where('scraping_status', $scrapingStatus)
+                ->orderBy('next_scrape_at');
+
+            if ($scrapingStatus !== ScrapingStatus::PENDING) {
+                $query->where('next_scrape_at', '<=', now());
+            }
+
+            $this->dispatchScrapeEntityJobs($query);
+        }
+    }
+
+    /**
+     * @param Builder $entityQuery
+     * @return int The number of entities dispatched
+     */
+    private function dispatchScrapeEntityJobs(Builder $entityQuery): int
+    {
         $queueName = QueueEnum::SCRAPING->value;
         $maxQueueSize = config('queue.max_scraping_queue_size');
 
@@ -84,28 +107,15 @@ class ScheduleScrapeDueJob implements ShouldQueue, ShouldBeUniqueUntilProcessing
         $slotsAvailable = max(0, $maxQueueSize - $currentSize);
 
         if ($slotsAvailable <= 0) {
-            return;
+            return 0;
         }
 
         $toDispatch = min($this->limit, $slotsAvailable);
 
-        $maxAttempts = config('queue.max_scrape_attempts');
-
-        $entities = Entity::query()
-            ->where('scraping_status', ScrapingStatus::PENDING)
-            ->where('attempts', '<', $maxAttempts)
-            ->where(function ($query) {
-                $query->whereNull('next_scrape_at')
-                    ->orWhere('next_scrape_at', '<=', now());
-            })
-            ->orderByRaw('CASE WHEN next_scrape_at IS NULL THEN 0 ELSE 1 END')
-            ->orderBy('next_scrape_at', 'asc')
-            ->orderBy('source_id')
-            ->limit($toDispatch)
-            ->get();
+        $entities = $entityQuery->take($toDispatch)->get();
 
         if ($entities->isEmpty()) {
-            return;
+            return 0;
         }
 
         $ids = $entities->pluck('id')->toArray();
@@ -120,5 +130,7 @@ class ScheduleScrapeDueJob implements ShouldQueue, ShouldBeUniqueUntilProcessing
         Log::debug('ScheduleScrapeDueJob: Queued '.$entities->count().' entities for scraping.', [
             'queue' => $currentSize.' → '.($currentSize + $entities->count()).'/'.$maxQueueSize,
         ]);
+
+        return $entities->count();
     }
 }

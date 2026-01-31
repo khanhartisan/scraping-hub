@@ -23,6 +23,8 @@ use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Psr\Http\Message\ResponseInterface;
 
 class ScrapeEntityJob implements ShouldQueue
@@ -160,13 +162,22 @@ class ScrapeEntityJob implements ShouldQueue
         }
         $mediaCount = $this->countMediaInMarkdown($pageData->getMarkdownContent());
 
-        DB::transaction(function () use ($entity, $classification, $pageData, $contentLength, $linkCount, $mediaCount, $fetchDurationMs) {
-            $version = $entity->snapshots_count + 1;
+        $version = $entity->snapshots_count + 1;
+        $filePath = 'snapshots/'.$entity->id.'/'.($snapshotId = Str::ulid()).'.html';
+        Storage::put($filePath, $html);
+        $fileSize = Storage::size($filePath);
+
+        DB::transaction(function () use ($snapshotId, $entity, $classification, $pageData, $contentLength, $linkCount, $mediaCount, $fetchDurationMs, $version, $filePath, $fileSize) {
             // Snapshot with SUCCESS status for history/evaluation (failure paths create snapshots in markEntityFailed).
             $snapshot = new Snapshot([
+                'id' => $snapshotId,
                 'entity_id' => $entity->id,
                 'scraping_status' => ScrapingStatus::SUCCESS,
                 'version' => $version,
+                'file_path' => $filePath,
+                'file_size' => $fileSize,
+                'file_mime_type' => 'text/html',
+                'file_extension' => 'html',
                 'content_length' => $contentLength,
                 'link_count' => $linkCount,
                 'media_count' => $mediaCount,

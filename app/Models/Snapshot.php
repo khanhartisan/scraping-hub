@@ -11,6 +11,10 @@ class Snapshot extends Model
         'entity_id',
         'scraping_status',
         'version',
+        'file_path',
+        'file_size',
+        'file_mime_type',
+        'file_extension',
         'error_logs',
     ];
 

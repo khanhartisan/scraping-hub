@@ -86,4 +86,11 @@ class Entity extends Model
             ->using(EntityVertical::class)
             ->as('entity_vertical');
     }
+
+    public function tags(): BelongsToMany
+    {
+        return $this->belongsToMany(Tag::class)
+            ->using(EntityTag::class)
+            ->as('entity_tag');
+    }
 }

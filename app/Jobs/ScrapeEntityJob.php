@@ -12,6 +12,7 @@ use App\Facades\Scraper;
 use App\Models\Entity;
 use App\Models\Snapshot;
 use App\Models\Source;
+use App\Models\Tag;
 use App\Utils\HtmlCleaner;
 use Carbon\Carbon;
 use GuzzleHttp\Exception\ConnectException;
@@ -200,6 +201,11 @@ class ScrapeEntityJob implements ShouldQueue
             $entity->fetched_at = Carbon::now();
             $entity->snapshots_count = $version;
             $entity->save();
+
+            $tagIds = collect($classification->getTags())
+                ->map(fn (string $name): string => Tag::firstOrCreate(['name' => $name])->id)
+                ->all();
+            $entity->tags()->sync($tagIds);
         });
 
         // Long-running policy evaluation outside transaction.
@@ -302,12 +308,12 @@ class ScrapeEntityJob implements ShouldQueue
 
     protected function countLinksInMarkdown(string $markdown): int
     {
-        return (int) preg_match_all('/\]\s*\([^)]+\)/', $markdown);
+        return (int) preg_match_all('/]\s*\([^)]+\)/', $markdown);
     }
 
     protected function countMediaInMarkdown(string $markdown): int
     {
-        $img = (int) preg_match_all('/!\[[^\]]*\]\s*\([^)]+\)/', $markdown);
+        $img = (int) preg_match_all('/!\[[^]]*]\s*\([^)]+\)/', $markdown);
         $embeds = (int) preg_match_all('/<img\s/i', $markdown);
 
         return $img + $embeds;

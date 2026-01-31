@@ -23,7 +23,6 @@ class HtmlCleaner
         $html = self::normalizeWhitespace($html);
 
         // Truncate if necessary
-        $maxLength = $maxLength ?? 50000;
         $html = self::truncate($html, $maxLength);
 
         return $html;
@@ -40,13 +39,10 @@ class HtmlCleaner
     public static function minify(string $html, ?int $maxLength = null): string
     {
         // Start with clean() processing
-        $html = self::clean($html, null); // Don't truncate yet, we'll do it at the end
+        $html = self::clean($html); // Don't truncate yet, we'll do it at the end
 
         // Remove HTML comments
         $html = self::removeComments($html);
-
-        // Remove empty tags
-        $html = self::removeEmptyTags($html);
 
         // Aggressively compress whitespace (more than normalize)
         $html = self::compressWhitespace($html);
@@ -54,11 +50,11 @@ class HtmlCleaner
         // Remove whitespace around tags
         $html = self::removeWhitespaceAroundTags($html);
 
-        // Truncate if necessary
-        $maxLength = $maxLength ?? 50000;
-        $html = self::truncate($html, $maxLength);
+        // Remove empty tags
+        $html = self::removeEmptyTags($html);
 
-        return $html;
+        // Truncate if necessary
+        return self::truncate($html, $maxLength);
     }
 
     /**
@@ -71,17 +67,14 @@ class HtmlCleaner
      */
     public static function sanitize(string $html, ?int $maxLength = null): string
     {
-        // Start with minify() processing
-        $html = self::minify($html, null); // Don't truncate yet, we'll do it at the end
-
         // Remove all attributes from HTML tags
         $html = self::removeAllAttributes($html);
 
-        // Truncate if necessary
-        $maxLength = $maxLength ?? 50000;
-        $html = self::truncate($html, $maxLength);
+        // Minifying it
+        $html = self::minify($html);
 
-        return $html;
+        // Truncate if necessary
+        return self::truncate($html, $maxLength);
     }
 
     /**
@@ -121,9 +114,9 @@ class HtmlCleaner
     /**
      * Truncate HTML to a maximum length if necessary.
      */
-    protected static function truncate(string $html, int $maxLength): string
+    protected static function truncate(string $html, ?int $maxLength = null): string
     {
-        if (strlen($html) > $maxLength) {
+        if ($maxLength !== null and strlen($html) > $maxLength) {
             return substr($html, 0, $maxLength).'... [truncated]';
         }
 
@@ -143,21 +136,67 @@ class HtmlCleaner
      */
     protected static function removeEmptyTags(string $html): string
     {
-        // Common empty tags that can be safely removed
-        $emptyTags = [
-            'p', 'div', 'span', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
-            'li', 'td', 'th', 'dt', 'dd', 'section', 'article', 'aside',
-            'header', 'footer', 'nav', 'main', 'figure', 'figcaption',
-        ];
+        // 1) Remove self-closing tags ONLY when they have NO attributes:
+        // <br />  or <img/>  (no attrs) remove
+        // <img src="x" /> keep
+        $html = preg_replace(
+            '/<([a-z][a-z0-9:-]*)\s*\/\s*>/i',
+            '',
+            $html
+        ) ?? $html;
 
-        foreach ($emptyTags as $tag) {
-            // Match opening and closing tags with optional whitespace between them
-            $pattern = '/<'.$tag.'(?:\s[^>]*)?>\s*<\/'.$tag.'>/i';
-            $html = preg_replace($pattern, '', $html);
+        // Precompute which tags have a closing tag somewhere: </tag>
+        preg_match_all('/<\/\s*([a-z][a-z0-9:-]*)\s*>/i', $html, $m);
+        $hasClosing = [];
+        foreach ($m[1] as $t) {
+            $hasClosing[strtolower($t)] = true;
+        }
+
+        // 2) Remove opening tags that have NO closing tag anywhere in the doc
+        // ONLY when they have NO attributes:
+        // <meta> remove
+        // <meta content="..."> keep
+        $html = preg_replace_callback(
+            '/<\s*([a-z][a-z0-9:-]*)\b([^>]*)>/i',
+            static function (array $match) use ($hasClosing): string {
+                $tag = strtolower($match[1]);
+                $rawAttrs = $match[2] ?? '';
+
+                // If this tag has a closing somewhere, keep it (it might be a container)
+                if (isset($hasClosing[$tag])) {
+                    return $match[0];
+                }
+
+                // If it has any non-whitespace in attribute chunk -> keep
+                // Example rawAttrs: ' content="x"' or ' href=#'
+                if (trim($rawAttrs) !== '') {
+                    return $match[0];
+                }
+
+                // Otherwise it's a naked void/unclosed tag like <meta> -> remove
+                return '';
+            },
+            $html
+        ) ?? $html;
+
+        // 3) Remove empty container pairs recursively
+        // ONLY when opening tag has NO attributes:
+        // <div></div> remove
+        // <div class="x"></div> keep
+        $prev = null;
+        while ($prev !== $html) {
+            $prev = $html;
+
+            $html = preg_replace(
+                '/<\s*([a-z][a-z0-9:-]*)\s*>(?:\s|&nbsp;|&#160;|&#xA0;)*<\/\s*\1\s*>/i',
+                '',
+                $html
+            ) ?? $html;
         }
 
         return $html;
     }
+
 
     /**
      * Compress whitespace more aggressively than normalize.
@@ -189,18 +228,88 @@ class HtmlCleaner
     }
 
     /**
-     * Remove all attributes from HTML tags, keeping only tag names and content.
+     * Remove all attributes from HTML tags, but keep a safe whitelist of important attributes.
+     *
+     * @param string $html
+     * @param array<string> $keepAttributes Attributes to preserve (case-insensitive), e.g. ['href','src'].
      */
-    protected static function removeAllAttributes(string $html): string
-    {
-        // Handle self-closing tags first (like <img />, <br />, etc.)
-        // Pattern: <tag attribute="value" /> -> <tag />
-        $html = preg_replace('/<(\w+)(\s+[^>]*)?\s*\/>/i', '<$1 />', $html);
+    protected static function removeAllAttributes(string $html, array $keepAttributes = [
+        // Links & navigation
+        'href', 'rel', 'target',
 
-        // Match opening tags and remove all attributes
-        // Pattern: <tag attribute="value" attribute2='value2' attribute3> -> <tag>
-        $html = preg_replace('/<(\w+)(\s+[^>]*)?>/i', '<$1>', $html);
+        // Media / resources
+        'src', 'srcset', 'sizes', 'alt',
 
-        return $html;
+        // Meta / SEO / document hints
+        'content', 'name', 'property', 'charset', 'http-equiv',
+
+        // Usability / accessibility
+        'title', 'aria-label', 'role',
+
+        // Semantics sometimes useful when extracting structured content
+        'datetime',
+
+        // Images/iframes sizing can matter for downstream rendering heuristics
+        'width', 'height',
+    ]): string {
+        // Normalize whitelist to lowercase lookup table for fast checks
+        $keep = [];
+        foreach ($keepAttributes as $a) {
+            $keep[strtolower($a)] = true;
+        }
+
+        $pattern = '/<(?!!--|!DOCTYPE|\?)(?!\/)([a-z][a-z0-9:-]*)\b([^<>]*?)(\/?)>/i';
+
+        $result = preg_replace_callback(
+            $pattern,
+            static function (array $m) use ($keep): string {
+                $tag = $m[1];
+                $attrChunk = $m[2] ?? '';
+                $selfClosing = ($m[3] ?? '') === '/';
+
+                $keptPairs = [];
+
+                // Match attributes:
+                // - key="value"
+                // - key='value'
+                // - key=value
+                // - boolean key
+                if ($attrChunk !== '') {
+                    preg_match_all(
+                        '/([a-z_:][a-z0-9:._-]*)(?:\s*=\s*(?:"([^"]*)"|\'([^\']*)\'|([^\s"\'>\/=]+)))?/i',
+                        $attrChunk,
+                        $am,
+                        PREG_SET_ORDER
+                    );
+
+                    foreach ($am as $a) {
+                        $name = $a[1];
+                        $lname = strtolower($name);
+
+                        if (!isset($keep[$lname])) {
+                            continue;
+                        }
+
+                        // Value can be in group 2/3/4; if none => boolean attribute
+                        $value = $a[2] ?? ($a[3] ?? ($a[4] ?? null));
+
+                        if ($value === null) {
+                            // boolean attribute like "disabled"
+                            $keptPairs[] = $name;
+                        } else {
+                            // Escape quotes minimally; we always output double quotes
+                            $escaped = htmlspecialchars($value, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+                            $keptPairs[] = $name . '="' . $escaped . '"';
+                        }
+                    }
+                }
+
+                $attrsOut = $keptPairs ? (' ' . implode(' ', $keptPairs)) : '';
+                return $selfClosing ? "<{$tag}{$attrsOut} />" : "<{$tag}{$attrsOut}>";
+            },
+            $html
+        );
+
+        return $result ?? $html;
     }
 }

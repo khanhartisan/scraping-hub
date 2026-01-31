@@ -6,7 +6,6 @@ use App\Contracts\OpenAI\OpenAIClient;
 use App\Contracts\OpenAI\ResponseInput;
 use App\Contracts\OpenAI\ResponseOptions;
 use App\Contracts\PageParser\PageData;
-use App\Facades\OpenAI;
 use App\Services\PageParser\PageParserService;
 use Carbon\Carbon;
 use GuzzleHttp\Exception\RequestException;
@@ -18,14 +17,12 @@ class OpenAIPageParserDriver extends PageParserService
 
     protected string $defaultModel;
 
-    public function __construct(array $config = [])
+    public function __construct(OpenAIClient $openAIClient, array $config = [])
     {
         parent::__construct($config);
 
+        $this->openAIClient = $openAIClient;
         $this->defaultModel = $config['model'] ?? 'gpt-4o-mini';
-
-        // Resolve OpenAI client from container
-        $this->openAIClient = OpenAI::driver();
     }
 
     /**

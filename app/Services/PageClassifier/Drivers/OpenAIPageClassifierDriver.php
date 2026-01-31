@@ -9,7 +9,6 @@ use App\Contracts\PageClassifier\ClassificationResult;
 use App\Enums\ContentType;
 use App\Enums\PageType;
 use App\Enums\Temporal;
-use App\Facades\OpenAI;
 use App\Services\PageClassifier\PageClassifierService;
 use RuntimeException;
 
@@ -19,14 +18,12 @@ class OpenAIPageClassifierDriver extends PageClassifierService
 
     protected string $defaultModel;
 
-    public function __construct(array $config = [])
+    public function __construct(OpenAIClient $openAIClient, array $config = [])
     {
         parent::__construct($config);
 
+        $this->openAIClient = $openAIClient;
         $this->defaultModel = $config['model'] ?? 'gpt-4o-mini';
-
-        // Resolve OpenAI client from container
-        $this->openAIClient = OpenAI::driver();
     }
 
     /**

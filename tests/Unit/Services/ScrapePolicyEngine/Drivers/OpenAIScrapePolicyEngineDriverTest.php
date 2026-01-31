@@ -69,9 +69,7 @@ class OpenAIScrapePolicyEngineDriverTest extends TestCase
             ->once()
             ->andReturn($mockResponse);
 
-        $this->app->instance(OpenAIClient::class, $mockOpenAIClient);
-
-        $driver = new OpenAIScrapePolicyEngineDriver(['model' => 'gpt-4o-mini']);
+        $driver = new OpenAIScrapePolicyEngineDriver($mockOpenAIClient,['model' => 'gpt-4o-mini']);
         $baseTime = Carbon::now();
 
         $result = $driver->evaluate($entity, $baseTime);
@@ -129,9 +127,7 @@ class OpenAIScrapePolicyEngineDriverTest extends TestCase
             ->once()
             ->andReturn($mockResponse);
 
-        $this->app->instance(OpenAIClient::class, $mockOpenAIClient);
-
-        $driver = new OpenAIScrapePolicyEngineDriver(['model' => 'gpt-4o-mini']);
+        $driver = new OpenAIScrapePolicyEngineDriver($mockOpenAIClient,['model' => 'gpt-4o-mini']);
 
         $result = $driver->evaluate($entity);
 
@@ -185,9 +181,7 @@ class OpenAIScrapePolicyEngineDriverTest extends TestCase
             ->once()
             ->andReturn($mockResponse);
 
-        $this->app->instance(OpenAIClient::class, $mockOpenAIClient);
-
-        $driver = new OpenAIScrapePolicyEngineDriver(['model' => 'gpt-4o-mini']);
+        $driver = new OpenAIScrapePolicyEngineDriver($mockOpenAIClient,['model' => 'gpt-4o-mini']);
 
         $result = $driver->evaluate($entity);
 
@@ -247,9 +241,7 @@ class OpenAIScrapePolicyEngineDriverTest extends TestCase
             ->once()
             ->andReturn($mockResponse);
 
-        $this->app->instance(OpenAIClient::class, $mockOpenAIClient);
-
-        $driver = new OpenAIScrapePolicyEngineDriver(['model' => 'gpt-4o-mini']);
+        $driver = new OpenAIScrapePolicyEngineDriver($mockOpenAIClient,['model' => 'gpt-4o-mini']);
 
         $result = $driver->evaluate($entity);
 
@@ -292,9 +284,7 @@ class OpenAIScrapePolicyEngineDriverTest extends TestCase
             ->once()
             ->andReturn($mockResponse);
 
-        $this->app->instance(OpenAIClient::class, $mockOpenAIClient);
-
-        $driver = new OpenAIScrapePolicyEngineDriver(['model' => 'gpt-4o-mini']);
+        $driver = new OpenAIScrapePolicyEngineDriver($mockOpenAIClient,['model' => 'gpt-4o-mini']);
 
         $result = $driver->evaluate($entity);
 
@@ -337,9 +327,7 @@ class OpenAIScrapePolicyEngineDriverTest extends TestCase
             ->once()
             ->andReturn($mockResponse);
 
-        $this->app->instance(OpenAIClient::class, $mockOpenAIClient);
-
-        $driver = new OpenAIScrapePolicyEngineDriver(['model' => 'gpt-4o-mini']);
+        $driver = new OpenAIScrapePolicyEngineDriver($mockOpenAIClient,['model' => 'gpt-4o-mini']);
 
         $result = $driver->evaluate($entity);
 
@@ -382,9 +370,7 @@ class OpenAIScrapePolicyEngineDriverTest extends TestCase
             ->once()
             ->andReturn($mockResponse);
 
-        $this->app->instance(OpenAIClient::class, $mockOpenAIClient);
-
-        $driver = new OpenAIScrapePolicyEngineDriver(['model' => 'gpt-4o-mini']);
+        $driver = new OpenAIScrapePolicyEngineDriver($mockOpenAIClient,['model' => 'gpt-4o-mini']);
 
         $result = $driver->evaluate($entity);
 
@@ -438,9 +424,7 @@ class OpenAIScrapePolicyEngineDriverTest extends TestCase
             )
             ->andReturn($mockResponse);
 
-        $this->app->instance(OpenAIClient::class, $mockOpenAIClient);
-
-        $driver = new OpenAIScrapePolicyEngineDriver(['model' => 'gpt-4o-mini']);
+        $driver = new OpenAIScrapePolicyEngineDriver($mockOpenAIClient,['model' => 'gpt-4o-mini']);
 
         $result = $driver->evaluate($entity);
 
@@ -488,9 +472,7 @@ class OpenAIScrapePolicyEngineDriverTest extends TestCase
             )
             ->andReturn($mockResponse);
 
-        $this->app->instance(OpenAIClient::class, $mockOpenAIClient);
-
-        $driver = new OpenAIScrapePolicyEngineDriver(['model' => 'gpt-4o']);
+        $driver = new OpenAIScrapePolicyEngineDriver($mockOpenAIClient,['model' => 'gpt-4o']);
 
         $result = $driver->evaluate($entity);
 
@@ -512,9 +494,7 @@ class OpenAIScrapePolicyEngineDriverTest extends TestCase
             ->once()
             ->andThrow(new \Exception('API connection failed'));
 
-        $this->app->instance(OpenAIClient::class, $mockOpenAIClient);
-
-        $driver = new OpenAIScrapePolicyEngineDriver(['model' => 'gpt-4o-mini']);
+        $driver = new OpenAIScrapePolicyEngineDriver($mockOpenAIClient,['model' => 'gpt-4o-mini']);
 
         $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage('Failed to evaluate scraping policy with OpenAI');
@@ -542,9 +522,7 @@ class OpenAIScrapePolicyEngineDriverTest extends TestCase
             ->once()
             ->andReturn($mockResponse);
 
-        $this->app->instance(OpenAIClient::class, $mockOpenAIClient);
-
-        $driver = new OpenAIScrapePolicyEngineDriver(['model' => 'gpt-4o-mini']);
+        $driver = new OpenAIScrapePolicyEngineDriver($mockOpenAIClient,['model' => 'gpt-4o-mini']);
 
         $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage('OpenAI returned empty policy evaluation response');
@@ -582,9 +560,7 @@ class OpenAIScrapePolicyEngineDriverTest extends TestCase
             ->once()
             ->andReturn($mockResponse);
 
-        $this->app->instance(OpenAIClient::class, $mockOpenAIClient);
-
-        $driver = new OpenAIScrapePolicyEngineDriver(['model' => 'gpt-4o-mini']);
+        $driver = new OpenAIScrapePolicyEngineDriver($mockOpenAIClient,['model' => 'gpt-4o-mini']);
 
         $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage('OpenAI refused to evaluate the scraping policy');
@@ -622,9 +598,7 @@ class OpenAIScrapePolicyEngineDriverTest extends TestCase
             ->once()
             ->andReturn($mockResponse);
 
-        $this->app->instance(OpenAIClient::class, $mockOpenAIClient);
-
-        $driver = new OpenAIScrapePolicyEngineDriver(['model' => 'gpt-4o-mini']);
+        $driver = new OpenAIScrapePolicyEngineDriver($mockOpenAIClient,['model' => 'gpt-4o-mini']);
 
         $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage('Failed to parse policy evaluation response as JSON');
@@ -687,9 +661,7 @@ class OpenAIScrapePolicyEngineDriverTest extends TestCase
             )
             ->andReturn($mockResponse);
 
-        $this->app->instance(OpenAIClient::class, $mockOpenAIClient);
-
-        $driver = new OpenAIScrapePolicyEngineDriver(['model' => 'gpt-4o-mini']);
+        $driver = new OpenAIScrapePolicyEngineDriver($mockOpenAIClient,['model' => 'gpt-4o-mini']);
 
         $result = $driver->evaluate($entity);
 
@@ -741,9 +713,7 @@ class OpenAIScrapePolicyEngineDriverTest extends TestCase
             ->once()
             ->andReturn($mockResponse);
 
-        $this->app->instance(OpenAIClient::class, $mockOpenAIClient);
-
-        $driver = new OpenAIScrapePolicyEngineDriver(['model' => 'gpt-4o-mini']);
+        $driver = new OpenAIScrapePolicyEngineDriver($mockOpenAIClient,['model' => 'gpt-4o-mini']);
 
         $result = $driver->evaluate($entity);
 
@@ -793,9 +763,7 @@ class OpenAIScrapePolicyEngineDriverTest extends TestCase
                 ->once()
                 ->andReturn($mockResponse);
 
-            $this->app->instance(OpenAIClient::class, $mockOpenAIClient);
-
-            $driver = new OpenAIScrapePolicyEngineDriver(['model' => 'gpt-4o-mini']);
+            $driver = new OpenAIScrapePolicyEngineDriver($mockOpenAIClient,['model' => 'gpt-4o-mini']);
             $baseTime = Carbon::now();
 
             $result = $driver->evaluate($entity, $baseTime);

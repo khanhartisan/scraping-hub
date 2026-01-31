@@ -55,7 +55,7 @@ class OpenAIServiceTest extends TestCase
 
         $mockClient->shouldReceive('post')
             ->once()
-            ->with('/responses', Mockery::on(function ($arg) use ($expectedPayload) {
+            ->with('responses', Mockery::on(function ($arg) use ($expectedPayload) {
                 return isset($arg['json'])
                     && $arg['json']['model'] === $expectedPayload['model']
                     && is_array($arg['json']['input'])
@@ -104,7 +104,7 @@ class OpenAIServiceTest extends TestCase
 
         $mockClient->shouldReceive('post')
             ->once()
-            ->with('/responses', Mockery::on(function ($arg) {
+            ->with('responses', Mockery::on(function ($arg) {
                 return isset($arg['json'])
                     && $arg['json']['model'] === 'gpt-4o'
                     && is_array($arg['json']['input']);
@@ -139,7 +139,7 @@ class OpenAIServiceTest extends TestCase
 
         $mockClient->shouldReceive('post')
             ->once()
-            ->with('/responses', Mockery::on(function ($arg) {
+            ->with('responses', Mockery::on(function ($arg) {
                 $payload = $arg['json'];
                 return isset($payload['model'])
                     && $payload['model'] === 'gpt-4o'
@@ -211,7 +211,7 @@ class OpenAIServiceTest extends TestCase
 
         $mockClient->shouldReceive('get')
             ->once()
-            ->with('/responses/resp_123')
+            ->with('responses/resp_123')
             ->andReturn($mockResponse);
 
         $service = $this->createServiceWithMockClient($mockClient);
@@ -244,7 +244,7 @@ class OpenAIServiceTest extends TestCase
 
         $mockClient->shouldReceive('post')
             ->once()
-            ->with('/responses/resp_123/cancel', [])
+            ->with('responses/resp_123/cancel', [])
             ->andReturn($mockResponse);
 
         $service = $this->createServiceWithMockClient($mockClient);
@@ -277,7 +277,7 @@ class OpenAIServiceTest extends TestCase
 
         $mockClient->shouldReceive('delete')
             ->once()
-            ->with('/responses/resp_123')
+            ->with('responses/resp_123')
             ->andReturn($mockResponse);
 
         $service = $this->createServiceWithMockClient($mockClient);
@@ -306,7 +306,7 @@ class OpenAIServiceTest extends TestCase
 
         $mockClient->shouldReceive('post')
             ->once()
-            ->with('/responses', Mockery::on(function ($arg) {
+            ->with('responses', Mockery::on(function ($arg) {
                 return isset($arg['json'])
                     && $arg['json']['model'] === 'gpt-4o-mini'
                     && is_array($arg['json']['input']);

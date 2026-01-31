@@ -2,6 +2,7 @@
 
 namespace App\Services\ScrapePolicyEngine;
 
+use App\Contracts\OpenAI\OpenAIClient;
 use Illuminate\Support\Manager;
 
 class ScrapePolicyEngineManager extends Manager
@@ -31,6 +32,6 @@ class ScrapePolicyEngineManager extends Manager
     {
         $config = $this->config->get('scrapepolicyengine.drivers.openai', []);
 
-        return new Drivers\OpenAIScrapePolicyEngineDriver($config);
+        return new Drivers\OpenAIScrapePolicyEngineDriver($this->container->make(OpenAIClient::class), $config);
     }
 }

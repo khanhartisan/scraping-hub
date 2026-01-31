@@ -17,6 +17,6 @@ class ScrapePolicyEngine extends Facade
      */
     protected static function getFacadeAccessor(): string
     {
-        return \App\Contracts\ScrapePolicyEngine\ScrapePolicyEngine::class;
+        return 'scrape_policy_engine.manager';
     }
 }

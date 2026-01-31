@@ -17,6 +17,6 @@ class PageParser extends Facade
      */
     protected static function getFacadeAccessor(): string
     {
-        return \App\Contracts\PageParser\Parser::class;
+        return 'page_parser.manager';
     }
 }

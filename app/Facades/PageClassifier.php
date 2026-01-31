@@ -17,6 +17,6 @@ class PageClassifier extends Facade
      */
     protected static function getFacadeAccessor(): string
     {
-        return \App\Contracts\PageClassifier\Classifier::class;
+        return 'page_classifier.manager';
     }
 }

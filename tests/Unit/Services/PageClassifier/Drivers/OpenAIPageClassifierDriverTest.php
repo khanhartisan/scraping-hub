@@ -51,9 +51,7 @@ class OpenAIPageClassifierDriverTest extends TestCase
             ->once()
             ->andReturn($mockResponse);
 
-        $this->app->instance(OpenAIClient::class, $mockOpenAIClient);
-
-        $driver = new OpenAIPageClassifierDriver(['model' => 'gpt-4o-mini']);
+        $driver = new OpenAIPageClassifierDriver($mockOpenAIClient,['model' => 'gpt-4o-mini']);
 
         $result = $driver->classify($html);
 
@@ -94,9 +92,7 @@ class OpenAIPageClassifierDriverTest extends TestCase
             ->once()
             ->andReturn($mockResponse);
 
-        $this->app->instance(OpenAIClient::class, $mockOpenAIClient);
-
-        $driver = new OpenAIPageClassifierDriver(['model' => 'gpt-4o-mini']);
+        $driver = new OpenAIPageClassifierDriver($mockOpenAIClient,['model' => 'gpt-4o-mini']);
 
         $result = $driver->classify($html);
 
@@ -136,9 +132,7 @@ class OpenAIPageClassifierDriverTest extends TestCase
             ->once()
             ->andReturn($mockResponse);
 
-        $this->app->instance(OpenAIClient::class, $mockOpenAIClient);
-
-        $driver = new OpenAIPageClassifierDriver(['model' => 'gpt-4o-mini']);
+        $driver = new OpenAIPageClassifierDriver($mockOpenAIClient,['model' => 'gpt-4o-mini']);
 
         $result = $driver->classify($html);
 
@@ -184,9 +178,7 @@ class OpenAIPageClassifierDriverTest extends TestCase
                 ->once()
                 ->andReturn($mockResponse);
 
-            $this->app->instance(OpenAIClient::class, $mockOpenAIClient);
-
-            $driver = new OpenAIPageClassifierDriver(['model' => 'gpt-4o-mini']);
+            $driver = new OpenAIPageClassifierDriver($mockOpenAIClient,['model' => 'gpt-4o-mini']);
 
             $result = $driver->classify($html);
 
@@ -233,9 +225,7 @@ class OpenAIPageClassifierDriverTest extends TestCase
                 ->once()
                 ->andReturn($mockResponse);
 
-            $this->app->instance(OpenAIClient::class, $mockOpenAIClient);
-
-            $driver = new OpenAIPageClassifierDriver(['model' => 'gpt-4o-mini']);
+            $driver = new OpenAIPageClassifierDriver($mockOpenAIClient,['model' => 'gpt-4o-mini']);
 
             $result = $driver->classify($html);
 
@@ -282,9 +272,7 @@ class OpenAIPageClassifierDriverTest extends TestCase
             )
             ->andReturn($mockResponse);
 
-        $this->app->instance(OpenAIClient::class, $mockOpenAIClient);
-
-        $driver = new OpenAIPageClassifierDriver(['model' => 'gpt-4o-mini']);
+        $driver = new OpenAIPageClassifierDriver($mockOpenAIClient,['model' => 'gpt-4o-mini']);
 
         $result = $driver->classify($html);
 
@@ -330,9 +318,7 @@ class OpenAIPageClassifierDriverTest extends TestCase
             )
             ->andReturn($mockResponse);
 
-        $this->app->instance(OpenAIClient::class, $mockOpenAIClient);
-
-        $driver = new OpenAIPageClassifierDriver([
+        $driver = new OpenAIPageClassifierDriver($mockOpenAIClient,[
             'model' => 'gpt-4o-mini',
             'max_html_length' => 50000,
         ]);
@@ -383,9 +369,7 @@ class OpenAIPageClassifierDriverTest extends TestCase
             )
             ->andReturn($mockResponse);
 
-        $this->app->instance(OpenAIClient::class, $mockOpenAIClient);
-
-        $driver = new OpenAIPageClassifierDriver(['model' => 'gpt-4o-mini']);
+        $driver = new OpenAIPageClassifierDriver($mockOpenAIClient,['model' => 'gpt-4o-mini']);
 
         $result = $driver->classify($html);
 
@@ -402,9 +386,7 @@ class OpenAIPageClassifierDriverTest extends TestCase
             ->once()
             ->andThrow(new \Exception('API connection failed'));
 
-        $this->app->instance(OpenAIClient::class, $mockOpenAIClient);
-
-        $driver = new OpenAIPageClassifierDriver(['model' => 'gpt-4o-mini']);
+        $driver = new OpenAIPageClassifierDriver($mockOpenAIClient,['model' => 'gpt-4o-mini']);
 
         $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage('Failed to classify page with OpenAI');
@@ -427,9 +409,7 @@ class OpenAIPageClassifierDriverTest extends TestCase
             ->once()
             ->andReturn($mockResponse);
 
-        $this->app->instance(OpenAIClient::class, $mockOpenAIClient);
-
-        $driver = new OpenAIPageClassifierDriver(['model' => 'gpt-4o-mini']);
+        $driver = new OpenAIPageClassifierDriver($mockOpenAIClient,['model' => 'gpt-4o-mini']);
 
         $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage('OpenAI returned empty classification response');
@@ -462,9 +442,7 @@ class OpenAIPageClassifierDriverTest extends TestCase
             ->once()
             ->andReturn($mockResponse);
 
-        $this->app->instance(OpenAIClient::class, $mockOpenAIClient);
-
-        $driver = new OpenAIPageClassifierDriver(['model' => 'gpt-4o-mini']);
+        $driver = new OpenAIPageClassifierDriver($mockOpenAIClient,['model' => 'gpt-4o-mini']);
 
         $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage('OpenAI refused to classify the page');
@@ -497,9 +475,7 @@ class OpenAIPageClassifierDriverTest extends TestCase
             ->once()
             ->andReturn($mockResponse);
 
-        $this->app->instance(OpenAIClient::class, $mockOpenAIClient);
-
-        $driver = new OpenAIPageClassifierDriver(['model' => 'gpt-4o-mini']);
+        $driver = new OpenAIPageClassifierDriver($mockOpenAIClient,['model' => 'gpt-4o-mini']);
 
         $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage('Failed to parse classification response as JSON');
@@ -537,9 +513,7 @@ class OpenAIPageClassifierDriverTest extends TestCase
             ->once()
             ->andReturn($mockResponse);
 
-        $this->app->instance(OpenAIClient::class, $mockOpenAIClient);
-
-        $driver = new OpenAIPageClassifierDriver(['model' => 'gpt-4o-mini']);
+        $driver = new OpenAIPageClassifierDriver($mockOpenAIClient,['model' => 'gpt-4o-mini']);
 
         $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage('Invalid content_type value');
@@ -577,9 +551,7 @@ class OpenAIPageClassifierDriverTest extends TestCase
             ->once()
             ->andReturn($mockResponse);
 
-        $this->app->instance(OpenAIClient::class, $mockOpenAIClient);
-
-        $driver = new OpenAIPageClassifierDriver(['model' => 'gpt-4o-mini']);
+        $driver = new OpenAIPageClassifierDriver($mockOpenAIClient,['model' => 'gpt-4o-mini']);
 
         $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage('Invalid page_type value');
@@ -617,9 +589,7 @@ class OpenAIPageClassifierDriverTest extends TestCase
             ->once()
             ->andReturn($mockResponse);
 
-        $this->app->instance(OpenAIClient::class, $mockOpenAIClient);
-
-        $driver = new OpenAIPageClassifierDriver(['model' => 'gpt-4o-mini']);
+        $driver = new OpenAIPageClassifierDriver($mockOpenAIClient,['model' => 'gpt-4o-mini']);
 
         $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage('Invalid temporal value');
@@ -663,9 +633,7 @@ class OpenAIPageClassifierDriverTest extends TestCase
             )
             ->andReturn($mockResponse);
 
-        $this->app->instance(OpenAIClient::class, $mockOpenAIClient);
-
-        $driver = new OpenAIPageClassifierDriver(['model' => 'gpt-4o']);
+        $driver = new OpenAIPageClassifierDriver($mockOpenAIClient,['model' => 'gpt-4o']);
 
         $result = $driver->classify($html);
 
@@ -704,9 +672,7 @@ class OpenAIPageClassifierDriverTest extends TestCase
             ->once()
             ->andReturn($mockResponse);
 
-        $this->app->instance(OpenAIClient::class, $mockOpenAIClient);
-
-        $driver = new OpenAIPageClassifierDriver(['model' => 'gpt-4o-mini']);
+        $driver = new OpenAIPageClassifierDriver($mockOpenAIClient,['model' => 'gpt-4o-mini']);
 
         $result = $driver->classify($html);
 

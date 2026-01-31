@@ -30,7 +30,6 @@ class HtmlCleaner
 
     /**
      * Minify HTML by applying all possible size reduction techniques.
-     * Extends clean() with additional minification steps.
      *
      * @param  string  $html  The raw HTML content
      * @param  int|null  $maxLength  Maximum length for the HTML (default: 50000)
@@ -38,9 +37,6 @@ class HtmlCleaner
      */
     public static function minify(string $html, ?int $maxLength = null): string
     {
-        // Start with clean() processing
-        $html = self::clean($html); // Don't truncate yet, we'll do it at the end
-
         // Remove HTML comments
         $html = self::removeComments($html);
 
@@ -50,8 +46,8 @@ class HtmlCleaner
         // Remove whitespace around tags
         $html = self::removeWhitespaceAroundTags($html);
 
-        // Remove empty tags
-        $html = self::removeEmptyTags($html);
+        // Decode HTML entities
+        $html = self::decodeEntities($html);
 
         // Truncate if necessary
         return self::truncate($html, $maxLength);
@@ -71,7 +67,13 @@ class HtmlCleaner
         $html = self::removeAllAttributes($html);
 
         // Minifying it
-        $html = self::minify($html);
+        $html = self::minify($html, $maxLength);
+
+        // Clean it
+        $html = self::clean($html, $maxLength);
+
+        // Remove empty tags
+        $html = self::removeEmptyTags($html);
 
         // Truncate if necessary
         return self::truncate($html, $maxLength);

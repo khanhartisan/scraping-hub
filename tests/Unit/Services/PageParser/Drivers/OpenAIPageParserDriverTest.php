@@ -53,9 +53,7 @@ class OpenAIPageParserDriverTest extends TestCase
             ->once()
             ->andReturn($mockResponse);
 
-        $this->app->instance(OpenAIClient::class, $mockOpenAIClient);
-
-        $driver = new OpenAIPageParserDriver(['model' => 'gpt-4o-mini']);
+        $driver = new OpenAIPageParserDriver($mockOpenAIClient,['model' => 'gpt-4o-mini']);
 
         $result = $driver->parse($html);
 
@@ -108,9 +106,7 @@ class OpenAIPageParserDriverTest extends TestCase
             ->once()
             ->andReturn($mockResponse);
 
-        $this->app->instance(OpenAIClient::class, $mockOpenAIClient);
-
-        $driver = new OpenAIPageParserDriver(['model' => 'gpt-4o-mini']);
+        $driver = new OpenAIPageParserDriver($mockOpenAIClient,['model' => 'gpt-4o-mini']);
 
         $result = $driver->parse($html);
 
@@ -150,9 +146,7 @@ class OpenAIPageParserDriverTest extends TestCase
             ->once()
             ->andReturn($mockResponse);
 
-        $this->app->instance(OpenAIClient::class, $mockOpenAIClient);
-
-        $driver = new OpenAIPageParserDriver(['model' => 'gpt-4o-mini']);
+        $driver = new OpenAIPageParserDriver($mockOpenAIClient,['model' => 'gpt-4o-mini']);
 
         $beforeParse = now();
         $result = $driver->parse($html);
@@ -202,9 +196,7 @@ class OpenAIPageParserDriverTest extends TestCase
             )
             ->andReturn($mockResponse);
 
-        $this->app->instance(OpenAIClient::class, $mockOpenAIClient);
-
-        $driver = new OpenAIPageParserDriver(['model' => 'gpt-4o-mini']);
+        $driver = new OpenAIPageParserDriver($mockOpenAIClient,['model' => 'gpt-4o-mini']);
 
         $result = $driver->parse($html);
 
@@ -250,9 +242,7 @@ class OpenAIPageParserDriverTest extends TestCase
             )
             ->andReturn($mockResponse);
 
-        $this->app->instance(OpenAIClient::class, $mockOpenAIClient);
-
-        $driver = new OpenAIPageParserDriver([
+        $driver = new OpenAIPageParserDriver($mockOpenAIClient,[
             'model' => 'gpt-4o-mini',
             'max_html_length' => 50000,
         ]);
@@ -311,9 +301,7 @@ class OpenAIPageParserDriverTest extends TestCase
             )
             ->andReturn($mockResponse);
 
-        $this->app->instance(OpenAIClient::class, $mockOpenAIClient);
-
-        $driver = new OpenAIPageParserDriver(['model' => 'gpt-4o-mini']);
+        $driver = new OpenAIPageParserDriver($mockOpenAIClient,['model' => 'gpt-4o-mini']);
 
         $result = $driver->parse($html);
 
@@ -330,9 +318,7 @@ class OpenAIPageParserDriverTest extends TestCase
             ->once()
             ->andThrow(new \Exception('API connection failed'));
 
-        $this->app->instance(OpenAIClient::class, $mockOpenAIClient);
-
-        $driver = new OpenAIPageParserDriver(['model' => 'gpt-4o-mini']);
+        $driver = new OpenAIPageParserDriver($mockOpenAIClient,['model' => 'gpt-4o-mini']);
 
         $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage('Failed to parse page with OpenAI');
@@ -355,9 +341,7 @@ class OpenAIPageParserDriverTest extends TestCase
             ->once()
             ->andReturn($mockResponse);
 
-        $this->app->instance(OpenAIClient::class, $mockOpenAIClient);
-
-        $driver = new OpenAIPageParserDriver(['model' => 'gpt-4o-mini']);
+        $driver = new OpenAIPageParserDriver($mockOpenAIClient,['model' => 'gpt-4o-mini']);
 
         $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage('OpenAI returned empty parsing response');
@@ -390,9 +374,7 @@ class OpenAIPageParserDriverTest extends TestCase
             ->once()
             ->andReturn($mockResponse);
 
-        $this->app->instance(OpenAIClient::class, $mockOpenAIClient);
-
-        $driver = new OpenAIPageParserDriver(['model' => 'gpt-4o-mini']);
+        $driver = new OpenAIPageParserDriver($mockOpenAIClient,['model' => 'gpt-4o-mini']);
 
         $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage('OpenAI refused to parse the page');
@@ -425,9 +407,7 @@ class OpenAIPageParserDriverTest extends TestCase
             ->once()
             ->andReturn($mockResponse);
 
-        $this->app->instance(OpenAIClient::class, $mockOpenAIClient);
-
-        $driver = new OpenAIPageParserDriver(['model' => 'gpt-4o-mini']);
+        $driver = new OpenAIPageParserDriver($mockOpenAIClient,['model' => 'gpt-4o-mini']);
 
         $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage('Failed to parse response as JSON');
@@ -467,9 +447,7 @@ class OpenAIPageParserDriverTest extends TestCase
             ->once()
             ->andReturn($mockResponse);
 
-        $this->app->instance(OpenAIClient::class, $mockOpenAIClient);
-
-        $driver = new OpenAIPageParserDriver(['model' => 'gpt-4o-mini']);
+        $driver = new OpenAIPageParserDriver($mockOpenAIClient,['model' => 'gpt-4o-mini']);
 
         $result = $driver->parse($html);
 
@@ -514,9 +492,7 @@ class OpenAIPageParserDriverTest extends TestCase
             ->once()
             ->andReturn($mockResponse);
 
-        $this->app->instance(OpenAIClient::class, $mockOpenAIClient);
-
-        $driver = new OpenAIPageParserDriver(['model' => 'gpt-4o-mini']);
+        $driver = new OpenAIPageParserDriver($mockOpenAIClient,['model' => 'gpt-4o-mini']);
 
         $result = $driver->parse($html);
 
@@ -563,9 +539,7 @@ class OpenAIPageParserDriverTest extends TestCase
             )
             ->andReturn($mockResponse);
 
-        $this->app->instance(OpenAIClient::class, $mockOpenAIClient);
-
-        $driver = new OpenAIPageParserDriver(['model' => 'gpt-4o']);
+        $driver = new OpenAIPageParserDriver($mockOpenAIClient,['model' => 'gpt-4o']);
 
         $result = $driver->parse($html);
 
@@ -602,9 +576,7 @@ class OpenAIPageParserDriverTest extends TestCase
             ->once()
             ->andReturn($mockResponse);
 
-        $this->app->instance(OpenAIClient::class, $mockOpenAIClient);
-
-        $driver = new OpenAIPageParserDriver(['model' => 'gpt-4o-mini']);
+        $driver = new OpenAIPageParserDriver($mockOpenAIClient,['model' => 'gpt-4o-mini']);
 
         $result = $driver->parse($html);
 
@@ -647,9 +619,7 @@ class OpenAIPageParserDriverTest extends TestCase
             ->once()
             ->andReturn($mockResponse);
 
-        $this->app->instance(OpenAIClient::class, $mockOpenAIClient);
-
-        $driver = new OpenAIPageParserDriver(['model' => 'gpt-4o-mini']);
+        $driver = new OpenAIPageParserDriver($mockOpenAIClient,['model' => 'gpt-4o-mini']);
 
         $result = $driver->parse($html);
 
@@ -688,9 +658,7 @@ class OpenAIPageParserDriverTest extends TestCase
             ->once()
             ->andReturn($mockResponse);
 
-        $this->app->instance(OpenAIClient::class, $mockOpenAIClient);
-
-        $driver = new OpenAIPageParserDriver(['model' => 'gpt-4o-mini']);
+        $driver = new OpenAIPageParserDriver($mockOpenAIClient,['model' => 'gpt-4o-mini']);
 
         $result = $driver->parse($html);
 
@@ -729,9 +697,7 @@ class OpenAIPageParserDriverTest extends TestCase
             ->once()
             ->andReturn($mockResponse);
 
-        $this->app->instance(OpenAIClient::class, $mockOpenAIClient);
-
-        $driver = new OpenAIPageParserDriver(['model' => 'gpt-4o-mini']);
+        $driver = new OpenAIPageParserDriver($mockOpenAIClient,['model' => 'gpt-4o-mini']);
 
         $result = $driver->parse($html);
 
@@ -773,9 +739,7 @@ class OpenAIPageParserDriverTest extends TestCase
             ->once()
             ->andReturn($mockResponse);
 
-        $this->app->instance(OpenAIClient::class, $mockOpenAIClient);
-
-        $driver = new OpenAIPageParserDriver(['model' => 'gpt-4o-mini']);
+        $driver = new OpenAIPageParserDriver($mockOpenAIClient,['model' => 'gpt-4o-mini']);
 
         $result = $driver->parse($html);
 
@@ -814,9 +778,7 @@ class OpenAIPageParserDriverTest extends TestCase
             ->once()
             ->andReturn($mockResponse);
 
-        $this->app->instance(OpenAIClient::class, $mockOpenAIClient);
-
-        $driver = new OpenAIPageParserDriver(['model' => 'gpt-4o-mini']);
+        $driver = new OpenAIPageParserDriver($mockOpenAIClient,['model' => 'gpt-4o-mini']);
 
         $result = $driver->parse($html);
 
@@ -856,9 +818,7 @@ class OpenAIPageParserDriverTest extends TestCase
             ->once()
             ->andReturn($mockResponse);
 
-        $this->app->instance(OpenAIClient::class, $mockOpenAIClient);
-
-        $driver = new OpenAIPageParserDriver(['model' => 'gpt-4o-mini']);
+        $driver = new OpenAIPageParserDriver($mockOpenAIClient,['model' => 'gpt-4o-mini']);
 
         $result = $driver->parse($html);
 
@@ -896,9 +856,7 @@ class OpenAIPageParserDriverTest extends TestCase
             ->once()
             ->andReturn($mockResponse);
 
-        $this->app->instance(OpenAIClient::class, $mockOpenAIClient);
-
-        $driver = new OpenAIPageParserDriver(['model' => 'gpt-4o-mini']);
+        $driver = new OpenAIPageParserDriver($mockOpenAIClient,['model' => 'gpt-4o-mini']);
 
         $result = $driver->parse($html);
 
@@ -943,9 +901,7 @@ class OpenAIPageParserDriverTest extends TestCase
             ->once()
             ->andReturn($mockResponse);
 
-        $this->app->instance(OpenAIClient::class, $mockOpenAIClient);
-
-        $driver = new OpenAIPageParserDriver([
+        $driver = new OpenAIPageParserDriver($mockOpenAIClient,[
             'model' => 'gpt-4o-mini',
             'max_html_length' => 1000, // Small limit to ensure truncation
         ]);
@@ -991,9 +947,7 @@ class OpenAIPageParserDriverTest extends TestCase
             ->once()
             ->andReturn($mockResponse);
 
-        $this->app->instance(OpenAIClient::class, $mockOpenAIClient);
-
-        $driver = new OpenAIPageParserDriver(['model' => 'gpt-4o-mini']);
+        $driver = new OpenAIPageParserDriver($mockOpenAIClient,['model' => 'gpt-4o-mini']);
 
         $result = $driver->parse($html);
 
@@ -1034,9 +988,7 @@ class OpenAIPageParserDriverTest extends TestCase
             ->once()
             ->andReturn($mockResponse);
 
-        $this->app->instance(OpenAIClient::class, $mockOpenAIClient);
-
-        $driver = new OpenAIPageParserDriver(['model' => 'gpt-4o-mini']);
+        $driver = new OpenAIPageParserDriver($mockOpenAIClient,['model' => 'gpt-4o-mini']);
 
         $result = $driver->parse($html);
 
@@ -1076,9 +1028,7 @@ class OpenAIPageParserDriverTest extends TestCase
             ->once()
             ->andReturn($mockResponse);
 
-        $this->app->instance(OpenAIClient::class, $mockOpenAIClient);
-
-        $driver = new OpenAIPageParserDriver(['model' => 'gpt-4o-mini']);
+        $driver = new OpenAIPageParserDriver($mockOpenAIClient,['model' => 'gpt-4o-mini']);
 
         $result = $driver->parse($html);
 

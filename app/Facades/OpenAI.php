@@ -20,6 +20,6 @@ class OpenAI extends Facade
      */
     protected static function getFacadeAccessor(): string
     {
-        return \App\Contracts\OpenAI\OpenAIClient::class;
+        return 'openai.manager';
     }
 }

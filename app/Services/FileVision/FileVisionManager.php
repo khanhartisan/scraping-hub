@@ -2,6 +2,7 @@
 
 namespace App\Services\FileVision;
 
+use App\Contracts\OpenAI\OpenAIClient;
 use Illuminate\Support\Manager;
 
 class FileVisionManager extends Manager
@@ -31,6 +32,6 @@ class FileVisionManager extends Manager
     {
         $config = $this->config->get('filevision.drivers.openai', []);
 
-        return new Drivers\OpenAIFileVisionDriver($config);
+        return new Drivers\OpenAIFileVisionDriver($this->container->make(OpenAIClient::class), $config);
     }
 }

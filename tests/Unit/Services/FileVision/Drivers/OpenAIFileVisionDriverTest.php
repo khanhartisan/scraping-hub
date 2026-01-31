@@ -70,9 +70,7 @@ class OpenAIFileVisionDriverTest extends TestCase
             ->once()
             ->andReturn($mockResponse);
 
-        $this->app->instance(OpenAIClient::class, $mockOpenAIClient);
-
-        $driver = new OpenAIFileVisionDriver(['model' => 'gpt-4o-mini']);
+        $driver = new OpenAIFileVisionDriver($mockOpenAIClient, ['model' => 'gpt-4o-mini']);
 
         $result = $driver->describe($this->testImageFile);
 
@@ -105,9 +103,7 @@ class OpenAIFileVisionDriverTest extends TestCase
             ->once()
             ->andReturn($mockResponse);
 
-        $this->app->instance(OpenAIClient::class, $mockOpenAIClient);
-
-        $driver = new OpenAIFileVisionDriver(['model' => 'gpt-4o-mini']);
+        $driver = new OpenAIFileVisionDriver($mockOpenAIClient, ['model' => 'gpt-4o-mini']);
 
         $result = $driver->describe($this->testTextFile);
 
@@ -140,13 +136,11 @@ class OpenAIFileVisionDriverTest extends TestCase
             ->once()
             ->andReturn($mockResponse);
 
-        $this->app->instance(OpenAIClient::class, $mockOpenAIClient);
-
         // Create a fake PDF file using Storage
         $pdfFile = 'test_document.pdf';
         Storage::put($pdfFile, '%PDF-1.4 test content');
 
-        $driver = new OpenAIFileVisionDriver(['model' => 'gpt-4o-mini']);
+        $driver = new OpenAIFileVisionDriver($mockOpenAIClient, ['model' => 'gpt-4o-mini']);
 
         $result = $driver->describe($pdfFile);
 
@@ -164,9 +158,7 @@ class OpenAIFileVisionDriverTest extends TestCase
             ->once()
             ->andThrow(new \Exception('API connection failed'));
 
-        $this->app->instance(OpenAIClient::class, $mockOpenAIClient);
-
-        $driver = new OpenAIFileVisionDriver(['model' => 'gpt-4o-mini']);
+        $driver = new OpenAIFileVisionDriver($mockOpenAIClient, ['model' => 'gpt-4o-mini']);
 
         $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage('Failed to get AI description');
@@ -187,9 +179,7 @@ class OpenAIFileVisionDriverTest extends TestCase
             ->once()
             ->andReturn($mockResponse);
 
-        $this->app->instance(OpenAIClient::class, $mockOpenAIClient);
-
-        $driver = new OpenAIFileVisionDriver(['model' => 'gpt-4o-mini']);
+        $driver = new OpenAIFileVisionDriver($mockOpenAIClient, ['model' => 'gpt-4o-mini']);
 
         $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage('AI provider returned empty description');
@@ -200,9 +190,7 @@ class OpenAIFileVisionDriverTest extends TestCase
     public function test_it_throws_exception_for_nonexistent_file(): void
     {
         $mockOpenAIClient = Mockery::mock(OpenAIClient::class);
-        $this->app->instance(OpenAIClient::class, $mockOpenAIClient);
-
-        $driver = new OpenAIFileVisionDriver(['model' => 'gpt-4o-mini']);
+        $driver = new OpenAIFileVisionDriver($mockOpenAIClient, ['model' => 'gpt-4o-mini']);
 
         $this->expectException(UnableToCheckFileExistence::class);
 
@@ -240,9 +228,7 @@ class OpenAIFileVisionDriverTest extends TestCase
             )
             ->andReturn($mockResponse);
 
-        $this->app->instance(OpenAIClient::class, $mockOpenAIClient);
-
-        $driver = new OpenAIFileVisionDriver(['model' => 'gpt-4o']);
+        $driver = new OpenAIFileVisionDriver($mockOpenAIClient, ['model' => 'gpt-4o']);
 
         $result = $driver->describe($this->testImageFile);
 
@@ -273,9 +259,7 @@ class OpenAIFileVisionDriverTest extends TestCase
             ->times(3)
             ->andReturn($mockResponse);
 
-        $this->app->instance(OpenAIClient::class, $mockOpenAIClient);
-
-        $driver = new OpenAIFileVisionDriver(['model' => 'gpt-4o-mini']);
+        $driver = new OpenAIFileVisionDriver($mockOpenAIClient, ['model' => 'gpt-4o-mini']);
 
         // Test image
         $imageResult = $driver->describe($this->testImageFile);
@@ -321,9 +305,7 @@ class OpenAIFileVisionDriverTest extends TestCase
             ->once()
             ->andReturn($mockResponse);
 
-        $this->app->instance(OpenAIClient::class, $mockOpenAIClient);
-
-        $driver = new OpenAIFileVisionDriver(['model' => 'gpt-4o-mini']);
+        $driver = new OpenAIFileVisionDriver($mockOpenAIClient, ['model' => 'gpt-4o-mini']);
 
         $result = $driver->describe($largeFile);
 

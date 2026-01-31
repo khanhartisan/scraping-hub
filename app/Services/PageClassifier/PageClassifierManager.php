@@ -2,6 +2,7 @@
 
 namespace App\Services\PageClassifier;
 
+use App\Contracts\OpenAI\OpenAIClient;
 use Illuminate\Support\Manager;
 
 class PageClassifierManager extends Manager
@@ -21,6 +22,6 @@ class PageClassifierManager extends Manager
     {
         $config = $this->config->get('pageclassifier.drivers.openai', []);
 
-        return new Drivers\OpenAIPageClassifierDriver($config);
+        return new Drivers\OpenAIPageClassifierDriver($this->container->make(OpenAIClient::class), $config);
     }
 }

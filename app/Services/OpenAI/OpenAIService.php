@@ -7,6 +7,8 @@ use App\Contracts\OpenAI\Response as ResponseObject;
 use App\Contracts\OpenAI\ResponseInput;
 use App\Contracts\OpenAI\ResponseOptions;
 use GuzzleHttp\Client;
+use GuzzleHttp\Exception\BadResponseException;
+use GuzzleHttp\Exception\ConnectException;
 use GuzzleHttp\Exception\GuzzleException;
 use GuzzleHttp\Exception\RequestException;
 use Illuminate\Support\Facades\Log;
@@ -59,7 +61,7 @@ class OpenAIService implements OpenAIClient
             $data = json_decode($response->getBody()->getContents(), true);
 
             return ResponseObject::fromArray($data);
-        } catch (RequestException $e) {
+        } catch (BadResponseException $e) {
             Log::error('OpenAI API error', [
                 'error' => $e->getMessage(),
                 'payload' => $payload,

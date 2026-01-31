@@ -17,6 +17,6 @@ class FileVision extends Facade
      */
     protected static function getFacadeAccessor(): string
     {
-        return \App\Contracts\FileVision\FileVision::class;
+        return 'filevision.manager';
     }
 }

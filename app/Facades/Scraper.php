@@ -17,6 +17,6 @@ class Scraper extends Facade
      */
     protected static function getFacadeAccessor(): string
     {
-        return \App\Services\Scraper\ScraperManager::class;
+        return 'scraper.manager';
     }
 }

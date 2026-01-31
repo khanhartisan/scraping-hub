@@ -2,6 +2,7 @@
 
 namespace App\Services\PageParser;
 
+use App\Contracts\OpenAI\OpenAIClient;
 use Illuminate\Support\Manager;
 
 class PageParserManager extends Manager
@@ -21,6 +22,6 @@ class PageParserManager extends Manager
     {
         $config = $this->config->get('pageparser.drivers.openai', []);
 
-        return new Drivers\OpenAIPageParserDriver($config);
+        return new Drivers\OpenAIPageParserDriver($this->container->make(OpenAIClient::class), $config);
     }
 }
